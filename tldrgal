@@ -8,7 +8,7 @@ def sh(cmd, **kwargs):
     return run(cmd, shell=True, check=True, **kwargs)
 
 parser = ArgumentParser()
-parser.add_argument('action', help='what you want to do, possible values: missing, add/new')
+parser.add_argument('action', help='what you want to do, possible values: missing, add/new, edit')
 parser.add_argument('-l', '--lang', help='the language of the tldr page(s) in question')
 parser.add_argument('-p', '--platform', help='the platform of the tldr page(s) in question')
 parser.add_argument('-n', '--name', help='the name of the tldr page(s) in question')
@@ -49,6 +49,30 @@ elif args.action == 'add' or args.action == 'new':
     editor = getenv('EDITOR', 'vi')
     sh(f'{editor} {dest}')
     sh(f'cd {folder} && git add -A && git commit -m "{args.name}: add page"')
+    sh(f'cd {folder} && git push -u origin {args.name}')
+elif args.action == 'edit':
+    if args.name is None or args.username is None:
+        print('-n/--name and -u/--username are required for the edit action')
+        exit(1)
+    if args.platform is None:
+        args.platform = 'common'
+    folder = getenv('HOME') + '/.tldrgal-temp-tldr'
+    dest = folder
+    if not path.exists(folder):
+        input('Please make sure, you have created your fork, before saving. (Enter to acknowledge)')
+        sh(f'git clone {TLDR_REPO} {folder}')
+        sh(f'cd {folder} && git remote set-url origin https://github.com/{args.username}/tldr.git')
+    if not path.isdir(folder):
+        print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
+        exit(1)
+    dest += '/pages'
+    if args.lang is not None:
+        dest += '.' + args.lang
+    dest += f'/{args.platform}/{args.name}.md'
+    sh(f'cd {folder} && git checkout -b {args.name}')
+    editor = getenv('EDITOR', 'vi')
+    sh(f'{editor} {dest}')
+    sh(f'cd {folder} && git add -A && GIT_EDITOR={editor} git commit -e -m "{args.name}: "')
     sh(f'cd {folder} && git push -u origin {args.name}')
 else:
     print('Unknown action.')
