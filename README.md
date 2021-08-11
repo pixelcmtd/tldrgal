@@ -1,8 +1,4 @@
-# 404-tldr-not-found
-Lists all commands on your system that don't have `tldr` pages.
-
-## how to
-```sh
-./404tnf.py > programs
-less programs
-```
+# `tldrgal`
+A general Werkzeugkasten to help you contribute to
+[`tldr`](https://github.com/tldr-pages/tldr), similar to Homebrew's tools like
+`create`, `edit`, `bump-formula-pr` and `bump-cask-pr`.

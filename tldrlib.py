@@ -4,6 +4,7 @@ from os import getenv, walk
 from subprocess import run, PIPE
 
 TLDR_HEAD = getenv('HOME') + '/.tldrc/tldr-master/pages'
+TLDR_REPO = 'https://github.com/tldr-pages/tldr.git'
 
 def has_tldr(prog: str) -> bool:
     """Checks, wheather `prog` has a tldr page. `prog` must not contain special regex characters."""
