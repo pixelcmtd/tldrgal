@@ -16,7 +16,9 @@ parser.add_argument('-u', '--username', help='your github username')
 args = parser.parse_args()
 
 if args.action == 'missing':
-    for p in list(get_all_installed_programs() - get_all_tldr_pages()).sort():
+    l = list(get_all_installed_programs() - get_all_tldr_pages())
+    l.sort()
+    for p in l:
         if not '.' in p:
             print(p)
 elif args.action == 'add' or args.action == 'new':
