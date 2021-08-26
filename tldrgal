@@ -9,6 +9,9 @@ from subprocess import run, PIPE
 from tldrlib import *
 from urllib.parse import urlencode
 
+home = getenv('HOME')
+editor = getenv('EDITOR', 'vi')
+
 def sh(cmd, **kwargs):
     return run(cmd, shell=True, check=True, **kwargs)
 
@@ -22,10 +25,22 @@ def checkout(branch):
     flag = '-b' if branch not in sh('git branch', stdout=PIPE).stdout.decode('utf-8') else ''
     sh(f'git checkout {flag} {branch}')
 
-home = getenv('HOME')
+def page_path(name, platform, lang):
+    dest = 'pages' if lang is None or lang == 'en' else f'pages.{lang}'
+    return f'{dest}/{platform}/{name}.md'
 
 with open(f'{home}/.config/tldrgal/username') as f:
     username = f.readline().strip()
+
+folder = home + '/.tldrgal-temp-tldr'
+if not path.exists(folder):
+    input('Please make sure, you have created your fork, before saving. (Enter to acknowledge)')
+    sh(f'git clone {TLDR_REPO} {folder}')
+    sh(f'cd {folder} && git remote set-url origin https://github.com/{username}/tldr.git')
+if not path.isdir(folder):
+    print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
+    exit(1)
+chdir(folder)
 
 parser = ArgumentParser()
 parser.add_argument('action', help='what you want to do, possible values: missing, add/new, edit, request')
@@ -50,28 +65,14 @@ elif args.action == 'add' or args.action == 'new':
         exit(1)
     if args.platform is None:
         args.platform = 'common'
-    folder = home + '/.tldrgal-temp-tldr'
-    if not path.exists(folder):
-        input('Please make sure, you have created your fork, before saving. (Enter to acknowledge)')
-        sh(f'git clone {TLDR_REPO} {folder}')
-        sh(f'cd {folder} && git remote set-url origin https://github.com/{username}/tldr.git')
-    if not path.isdir(folder):
-        print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
-        exit(1)
-    chdir(folder)
-    dest = 'pages'
-    if args.lang is not None:
-        dest += '.' + args.lang
-    dest += f'/{args.platform}/{args.name}.md'
+    dest = page_path(args.name, args.platform, args.lang)
     checkout(args.name)
-    f = open(dest, 'w')
-    f.write(f'# {args.name}\n\n'
-            '> DESC\n'
-            '> More information: <insert>.\n\n'
-            '- Example1:\n\n'
-            '`' + args.name + ' {{arg1}} {{arg2}}`')
-    f.close()
-    editor = getenv('EDITOR', 'vi')
+    with open(dest, 'w') as f:
+        f.write(f'# {args.name}\n\n'
+                '> DESC\n'
+                '> More information: <insert>.\n\n'
+                '- Example1:\n\n'
+                '`' + args.name + ' {{arg1}} {{arg2}}`')
     sh(f'{editor} {dest}')
     sh(f'git add -A && git commit -m "{args.name}: add page"')
     sh(f'git push -u origin {args.name}')
@@ -81,21 +82,8 @@ elif args.action == 'edit':
         exit(1)
     if args.platform is None:
         args.platform = 'common'
-    folder = home + '/.tldrgal-temp-tldr'
-    if not path.exists(folder):
-        input('Please make sure, you have created your fork, before saving. (Enter to acknowledge)')
-        sh(f'git clone {TLDR_REPO} {folder}')
-        sh(f'cd {folder} && git remote set-url origin https://github.com/{username}/tldr.git')
-    if not path.isdir(folder):
-        print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
-        exit(1)
-    chdir(folder)
-    dest = 'pages'
-    if args.lang is not None:
-        dest += '.' + args.lang
-    dest += f'/{args.platform}/{args.name}.md'
+    dest = page_path(args.name, args.platform, args.lang)
     checkout(args.name)
-    editor = getenv('EDITOR', 'vi')
     sh(f'{editor} {dest}')
     sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{args.name}: "')
     sh(f'git push -u origin {args.name}')
