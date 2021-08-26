@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 from os import path, chdir
 from subprocess import run, PIPE
 from tldrlib import *
+from urllib.parse import urlencode
 
 def sh(cmd, **kwargs):
     return run(cmd, shell=True, check=True, **kwargs)
@@ -16,6 +17,7 @@ def run_open(arg, **kwargs):
     return run(['open', arg], check=True, **kwargs)
 
 def checkout(branch):
+    """checks out main, then checks out `branch`, using -b if it doesn't exist"""
     sh('git checkout main && git pull')
     flag = '-b' if branch not in sh('git branch', stdout=PIPE).stdout.decode('utf-8') else ''
     sh(f'git checkout {flag} {branch}')
@@ -99,9 +101,9 @@ elif args.action == 'edit':
     sh(f'git push -u origin {args.name}')
 elif args.action == 'request':
     if args.name is None:
-        print('-n/--name is required for the edit action')
+        print('-n/--name is required for the request action')
         exit(1)
-    run_open(f'https://github.com/tldr-pages/tldr/issues/new?title=page%20request:%20{args.name}')
+    run_open('https://github.com/tldr-pages/tldr/issues/new?' + urlencode({'title': 'page request: ' + args.name}))
 else:
     print('Unknown action.')
     exit(1)
