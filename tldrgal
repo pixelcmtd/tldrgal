@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# TODO: use tldrl
 # TODO: support for other edits (`rawedit`: opens `SHELL` in pages/common)
 # TODO: alias for making aliases really quickly
 # TODO: pull request
@@ -74,6 +73,7 @@ elif args.action == 'add' or args.action == 'new':
                 '- Example1:\n\n'
                 '`' + args.name + ' {{arg1}} {{arg2}}`')
     sh(f'{editor} {dest}')
+    sh(f'tldrl -v {dest}')
     sh(f'git add -A && git commit -m "{args.name}: add page"')
     sh(f'git push -u origin {args.name}')
 elif args.action == 'edit':
@@ -85,6 +85,7 @@ elif args.action == 'edit':
     dest = page_path(args.name, args.platform, args.lang)
     checkout(args.name)
     sh(f'{editor} {dest}')
+    sh(f'tldrl -v {dest}')
     sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{args.name}: "')
     sh(f'git push -u origin {args.name}')
 elif args.action == 'request':
