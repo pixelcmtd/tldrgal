@@ -20,9 +20,10 @@ def run_open(arg, **kwargs):
 
 def checkout(branch):
     """checks out main, then checks out `branch`, using -b if it doesn't exist"""
-    sh('git checkout main && git pull')
-    flag = '-b' if branch not in sh('git branch', stdout=PIPE).stdout.decode('utf-8') else ''
-    sh(f'git checkout {flag} {branch}')
+    if branch in sh('git branch', stdout=PIPE).stdout.decode('utf-8'):
+        sh(f'git checkout {branch} && git pull')
+    else:
+        sh(f'git checkout main && git pull && git checkout -b {branch}')
 
 def page_path(name, platform, lang):
     dest = 'pages' if lang is None or lang == 'en' else f'pages.{lang}'
