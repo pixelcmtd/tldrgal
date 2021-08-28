@@ -79,7 +79,7 @@ elif args.action == 'add' or args.action == 'new':
                 '> DESC\n'
                 '> More information: <insert>.\n\n'
                 '- Example1:\n\n'
-                '`' + args.name + ' {{arg1}} {{arg2}}`')
+                '`' + args.name + ' {{arg1}} {{arg2}}`\n')
     sh(f'{editor} {dest}')
     sh(f'tldrl -v {dest}')
     sh(f'git add -A && git commit -m "{args.name}: add page"')
@@ -93,7 +93,7 @@ elif args.action == 'alias':
         f.write(f'# {args.name}\n\n'
                 f'> This command is an alias of `{args.target}`.\n\n'
                 '- View documentation for the original command:\n\n'
-                f'`tldr {args.target}`')
+                f'`tldr {args.target}`\n')
     sh(f'git add -A && git commit -m "{args.name}: add page"')
     sh(f'git push -u origin {args.name}')
 elif args.action == 'edit':
