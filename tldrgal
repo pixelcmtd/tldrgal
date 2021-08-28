@@ -51,10 +51,15 @@ chdir(folder)
 parser = ArgumentParser()
 parser.add_argument('action', help='what you want to do, possible values: missing, add/new, edit, request')
 parser.add_argument('-l', '--lang', help='the language of the tldr page(s) in question')
-parser.add_argument('-p', '--platform', help='the platform of the tldr page(s) in question')
+parser.add_argument('-p', '--platform', default='common', help='the platform of the tldr page(s) in question')
 parser.add_argument('-n', '--name', help='the name of the tldr page(s) in question')
 #parser.add_argument('-m', '--commit-message')
 args = parser.parse_args()
+
+def assert_name():
+    if args.name is None:
+        print('-n/--name is required for this action')
+        exit(1)
 
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
@@ -66,11 +71,7 @@ if args.action == 'missing':
         if not '.' in p:
             print(p)
 elif args.action == 'add' or args.action == 'new':
-    if args.name is None:
-        print('-n/--name is required for the add action')
-        exit(1)
-    if args.platform is None:
-        args.platform = 'common'
+    assert_name()
     dest = page_path(args.name, args.platform, args.lang)
     checkout(args.name)
     with open(dest, 'w') as f:
@@ -84,11 +85,7 @@ elif args.action == 'add' or args.action == 'new':
     sh(f'git add -A && git commit -m "{args.name}: add page"')
     sh(f'git push -u origin {args.name}')
 elif args.action == 'edit':
-    if args.name is None:
-        print('-n/--name is required for the edit action')
-        exit(1)
-    if args.platform is None:
-        args.platform = 'common'
+    assert_name()
     dest = page_path(args.name, args.platform, args.lang)
     checkout(args.name)
     sh(f'{editor} {dest}')
@@ -96,14 +93,10 @@ elif args.action == 'edit':
     sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{args.name}: "')
     sh(f'git push -u origin {args.name}')
 elif args.action == 'request':
-    if args.name is None:
-        print('-n/--name is required for the request action')
-        exit(1)
+    assert_name()
     new_issue({'title': 'page request: ' + args.name})
 elif args.action == 'multi-request':
-    if args.name is None:
-        print('-n/--name is required for the multi-request action')
-        exit(1)
+    assert_name()
     pages = split(' |,|;|:', args.name)
     title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, pages)
     body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', pages))
