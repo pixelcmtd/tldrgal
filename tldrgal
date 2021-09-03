@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # TODO: translated templates
+# TODO: `translate` action
 from argparse import ArgumentParser
 from functools import reduce
 from os import path, chdir
@@ -96,6 +97,8 @@ elif args.action == 'alias':
                 f'`tldr {args.target}`\n')
     sh(f'git add -A && git commit -m "{args.name}: add page"')
     sh(f'git push -u origin {args.name}')
+    params = urlencode({'labels': 'new command', 'body': f'alias of `{args.target}`', 'expand': 1})
+    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.name}?' + params)
 elif args.action == 'edit':
     assert_option(args.name, '-n/--name')
     dest = page_path(args.name, args.platform, args.lang)
