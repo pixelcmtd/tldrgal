@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # TODO: translated templates
 # TODO: `translate` action
+# TODO: implement -m
 from argparse import ArgumentParser
 from functools import reduce
 from os import path, chdir
 from re import split
 from subprocess import run, PIPE
+from sys import argv
 from tldrlib import *
 from urllib.parse import urlencode
 
@@ -48,77 +50,83 @@ if not path.isdir(folder):
     exit(1)
 chdir(folder)
 
-parser = ArgumentParser()
-parser.add_argument('action', help='what you want to do')
-parser.add_argument('-l', '--lang', help='the language of the tldr page(s) in question')
-parser.add_argument('-p', '--platform', default='common', help='the platform of the tldr page(s) in question')
-parser.add_argument('-n', '--name', help='the name of the tldr page(s) in question')
-parser.add_argument('-t', '--target', help='the name of the tldr page to refer to (only used in alias action)')
-#parser.add_argument('-m', '--commit-message')
-args = parser.parse_args()
-
-def assert_option(opt, name):
-    if opt is None:
-        print(f'{name} is required for this action')
-        exit(1)
-
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
 
-if args.action == 'missing':
+action = argv[1]
+del argv[1]
+
+if action != 'missing':
+    name = argv[1]
+    del argv[1]
+
+if action == 'alias':
+    target = argv[1]
+    del argv[1]
+
+parser = ArgumentParser()
+parser.add_argument('-l', '--language')
+parser.add_argument('-p', '--platform', default='common')
+parser.add_argument('-m', '--commit-message')
+args = parser.parse_args()
+
+if action in ['--version', '-v', '-V']:
+    print('tldrgal 1.0 beta 1 by pixel, chrissx Media')
+elif action in ['--help', '-h', '-H']:
+    print(f'{argv[0]} [action] [...] [-lpm]')
+    print()
+    print(f'{argv[0]} add [name]')
+    print(f'{argv[0]} alias [name] [target]')
+    print(f'{argv[0]} edit [name]')
+    print(f'{argv[0]} rawedit [name]')
+    print('TODO: HELP')
+elif action == 'missing':
     l = list(get_all_installed_programs() - get_all_tldr_pages())
     l.sort()
     for p in l:
         if not '.' in p:
             print(p)
-elif args.action == 'add' or args.action == 'new':
-    assert_option(args.name, '-n/--name')
-    dest = page_path(args.name, args.platform, args.lang)
-    checkout(args.name)
+elif action in ['add', 'new', 'create']:
+    dest = page_path(name, args.platform, args.lang)
+    checkout(name)
     with open(dest, 'w') as f:
-        f.write(f'# {args.name}\n\n'
+        f.write(f'# {name}\n\n'
                 '> DESC\n'
                 '> More information: <insert>.\n\n'
                 '- Example1:\n\n'
-                '`' + args.name + ' {{arg1}} {{arg2}}`\n')
+                '`' + name + ' {{arg1}} {{arg2}}`\n')
     sh(f'{editor} {dest}')
     sh(f'tldrl -v {dest}')
-    sh(f'git add -A && git commit -m "{args.name}: add page"')
-    sh(f'git push -u origin {args.name}')
-elif args.action == 'alias':
-    assert_option(args.name, '-n/--name')
-    assert_option(args.target, '-t/--target')
-    dest = page_path(args.name, args.platform, args.lang)
-    checkout(args.name)
+    sh(f'git add -A && git commit -m "{name}: add page"')
+    sh(f'git push -u origin {name}')
+elif action == 'alias':
+    dest = page_path(name, args.platform, args.lang)
+    checkout(name)
     with open(dest, 'w') as f:
-        f.write(f'# {args.name}\n\n'
-                f'> This command is an alias of `{args.target}`.\n\n'
+        f.write(f'# {name}\n\n'
+                f'> This command is an alias of `{target}`.\n\n'
                 '- View documentation for the original command:\n\n'
-                f'`tldr {args.target}`\n')
-    sh(f'git add -A && git commit -m "{args.name}: add page"')
-    sh(f'git push -u origin {args.name}')
-    params = urlencode({'labels': 'new command', 'body': f'alias of `{args.target}`', 'expand': 1})
-    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.name}?' + params)
-elif args.action == 'edit':
-    assert_option(args.name, '-n/--name')
-    dest = page_path(args.name, args.platform, args.lang)
-    checkout(args.name)
+                f'`tldr {target}`\n')
+    sh(f'git add -A && git commit -m "{name}: add page"')
+    sh(f'git push -u origin {name}')
+    params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
+    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{name}?' + params)
+elif action == 'edit':
+    dest = page_path(name, args.platform, args.lang)
+    checkout(name)
     sh(f'{editor} {dest}')
     sh(f'tldrl -v {dest}')
-    sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{args.name}: "')
-    sh(f'git push -u origin {args.name}')
-elif args.action == 'rawedit':
-    assert_option(args.name, '-n/--name')
-    checkout(args.name)
+    sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
+    sh(f'git push -u origin {name}')
+elif action == 'rawedit':
+    checkout(name)
     sh(shell)
-    sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{args.name}: "')
-    sh(f'git push -u origin {args.name}')
-elif args.action == 'request':
-    assert_option(args.name, '-n/--name')
-    new_issue({'title': 'page request: ' + args.name})
-elif args.action == 'multi-request':
-    assert_option(args.name, '-n/--name')
-    pages = split(' |,|;|:', args.name)
+    sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
+    sh(f'git push -u origin {name}')
+elif action == 'request':
+    new_issue({'title': f'page request: {name}'})
+elif action == 'multi-request':
+    pages = split(' |,|;|:', name)
     title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, pages)
     body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', pages))
     new_issue({'title': title, 'body': body})
