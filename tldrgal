@@ -56,7 +56,7 @@ if 'tldrl' not in get_all_installed_programs():
 action = argv[1]
 del argv[1]
 
-if action != 'missing':
+if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H']:
     name = argv[1]
     del argv[1]
 
@@ -71,14 +71,20 @@ parser.add_argument('-m', '--commit-message')
 args = parser.parse_args()
 
 if action in ['--version', '-v', '-V']:
-    print('tldrgal 1.0 beta 1 by pixel, chrissx Media')
+    print('tldrgal 1.0 beta 2 by pixel, chrissx Media')
 elif action in ['--help', '-h', '-H']:
-    print(f'{argv[0]} [action] [...] [-lpm]')
+    print('tldrgal [action] [...] [-lpm]')
     print()
-    print(f'{argv[0]} add [name]')
-    print(f'{argv[0]} alias [name] [target]')
-    print(f'{argv[0]} edit [name]')
-    print(f'{argv[0]} rawedit [name]')
+    print('tldrgal add [name]')
+    print('tldrgal alias [name] [target]')
+    print('tldrgal edit [name]')
+    print('tldrgal rawedit [name]')
+    print('tldrgal request [name]')
+    print('tldrgal multi-request [names]')
+    print()
+    print('--help, -h, -H       Display this help')
+    print('--version, -v, -V    Display information about this program')
+    print()
     print('TODO: HELP')
 elif action == 'missing':
     l = list(get_all_installed_programs() - get_all_tldr_pages())
@@ -126,6 +132,7 @@ elif action == 'rawedit':
 elif action == 'request':
     new_issue({'title': f'page request: {name}'})
 elif action == 'multi-request':
+    # TODO: support space separated names without quotes
     pages = split(' |,|;|:', name)
     title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, pages)
     body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', pages))
