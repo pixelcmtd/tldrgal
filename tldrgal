@@ -71,7 +71,7 @@ parser.add_argument('-m', '--commit-message')
 args = parser.parse_args()
 
 if action in ['--version', '-v', '-V']:
-    print('tldrgal 1.0 beta 2 by pixel, chrissx Media')
+    print('tldrgal 1.0 beta 3 by pixel, chrissx Media')
 elif action in ['--help', '-h', '-H']:
     print('tldrgal [action] [...] [-lpm]')
     print()
@@ -93,7 +93,7 @@ elif action == 'missing':
         if not '.' in p:
             print(p)
 elif action in ['add', 'new', 'create']:
-    dest = page_path(name, args.platform, args.lang)
+    dest = page_path(name, args.platform, args.language)
     checkout(name)
     with open(dest, 'w') as f:
         f.write(f'# {name}\n\n'
@@ -106,7 +106,7 @@ elif action in ['add', 'new', 'create']:
     sh(f'git add -A && git commit -m "{name}: add page"')
     sh(f'git push -u origin {name}')
 elif action == 'alias':
-    dest = page_path(name, args.platform, args.lang)
+    dest = page_path(name, args.platform, args.language)
     checkout(name)
     with open(dest, 'w') as f:
         f.write(f'# {name}\n\n'
@@ -118,7 +118,7 @@ elif action == 'alias':
     params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
     run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{name}?' + params)
 elif action == 'edit':
-    dest = page_path(name, args.platform, args.lang)
+    dest = page_path(name, args.platform, args.language)
     checkout(name)
     sh(f'{editor} {dest}')
     sh(f'tldrl -v {dest}')
