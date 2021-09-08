@@ -137,6 +137,18 @@ elif action == 'multi-request':
     title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, pages)
     body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', pages))
     new_issue({'title': title, 'body': body})
+elif action in ['find', 'fd']:
+    checkout('main')
+    sh(f'fd \'{name}\'')
+elif action in ['fetch-origin', 'fo']:
+    run_open(f'https://github.com/{username}/tldr/branches/fetch_and_merge/main')
+elif action in ['view', 'open']:
+    checkout('main')
+    sh(f'view {page_path(name, args.platform, args.language)}')
+elif action in ['delete', 'remove']:
+    # this name might be kinda misleading for beginners, but usually tldr pages are never removed
+    checkout('main')
+    sh(f'git branch -D {name} && git push -d origin {name}')
 else:
     print('Unknown action.')
     exit(1)
