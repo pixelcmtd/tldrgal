@@ -11,7 +11,7 @@ from sys import argv
 from tldrlib import *
 from urllib.parse import urlencode
 
-__version__ = '1.1-rc1'
+__version__ = '1.1-rc2'
 
 home = getenv('HOME')
 editor = getenv('EDITOR', 'vi')
@@ -147,6 +147,9 @@ elif action in ['fetch-origin', 'fo']:
 elif action in ['view', 'open']:
     checkout('main')
     sh(f'view {page_path(name, args.platform, args.language)}')
+elif action in ['cat']:
+    checkout('main')
+    sh(f'cat {page_path(name, args.platform, args.language)}')
 elif action in ['delete', 'remove']:
     # this name might be kinda misleading for beginners, but usually tldr pages are never removed
     checkout('main')
