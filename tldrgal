@@ -10,6 +10,7 @@ from subprocess import run, PIPE
 from sys import argv
 from tldrlib import *
 from urllib.parse import urlencode
+import platform
 
 __version__ = '1.1-rc2'
 
@@ -20,9 +21,8 @@ shell = getenv('SHELL', 'bash')
 def sh(cmd, **kwargs):
     return run(cmd, shell=True, check=True, **kwargs)
 
-def run_open(arg, **kwargs):
-    """unfortunately this doesnt work on linux, we might want to use xdg-open there"""
-    return run(['open', arg], check=True, **kwargs)
+def run_open(arg):
+    return run(['xdg-open' if 'linux' in platform.system().lower() else 'open', arg], check=True)
 
 def checkout(branch):
     """checks out main, then checks out `branch`, using -b if it doesn't exist"""
