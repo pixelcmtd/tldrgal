@@ -9,9 +9,9 @@ from os import path, chdir
 from re import split
 from subprocess import run, PIPE
 from sys import argv
-from tldrlib import *
 from urllib.parse import urlencode
-import platform
+from platform import system
+from tldrlib import *
 
 __version__ = '1.1-rc3'
 
@@ -23,7 +23,7 @@ def sh(cmd, **kwargs):
     return run(cmd, shell=True, check=True, **kwargs)
 
 def run_open(arg):
-    return run(['xdg-open' if 'linux' in platform.system().lower() else 'open', arg], check=True)
+    return run(['xdg-open' if 'linux' in system().lower() else 'open', arg], check=True)
 
 def checkout(branch):
     """checks out main, then checks out `branch`, using -b if it doesn't exist"""
@@ -31,10 +31,6 @@ def checkout(branch):
         sh(f'git checkout {branch} && git pull')
     else:
         sh(f'git checkout -b {branch}')
-
-def page_path(name, platform, lang):
-    dest = 'pages' if lang is None or lang == 'en' else f'pages.{lang}'
-    return f'{dest}/{platform}/{name}.md'
 
 def new_issue(params):
     params['labels'] = 'help wanted,new command'
@@ -79,6 +75,9 @@ args = parser.parse_args()
 if args.branch is None:
     args.branch = name.replace('+', 'x')
 
+page_path = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
+page_path += f'/{args.platform}/{name}.md'
+
 if action in ['--version', '-v', '-V', 'version']:
     print(f'tldrgal {__version__} by pixel, chrissx Media')
 elif action in ['--help', '-h', '-H', 'help']:
@@ -103,22 +102,21 @@ elif action == 'missing':
         if not '.' in p:
             print(p)
 elif action in ['add', 'new', 'create']:
-    dest = page_path(name, args.platform, args.language)
     checkout(args.branch)
-    with open(dest, 'w') as f:
+    with open(page_path, 'w') as f:
         f.write(f'# {name}\n\n'
                 '> DESC\n'
                 '> More information: <insert>.\n\n'
                 '- Example1:\n\n'
                 '`' + name + ' {{arg1}} {{arg2}}`\n')
-    sh(f'{editor} {dest}')
-    sh(f'tldrl -v {dest}')
+    sh(f'{editor} {page_path}')
+    sh(f'tldrl -v {page_path}')
     sh(f'git add -A && git commit -m "{name}: add page"')
     sh(f'git push -u origin {args.branch}')
 elif action == 'alias':
-    dest = page_path(name, args.platform, args.language)
+    # TODO: translations with automatic check for which pages of the target exist
     checkout(args.branch)
-    with open(dest, 'w') as f:
+    with open(page_path, 'w') as f:
         f.write(f'# {name}\n\n'
                 f'> This command is an alias of `{target}`.\n\n'
                 '- View documentation for the original command:\n\n'
@@ -128,10 +126,9 @@ elif action == 'alias':
     params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
     run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
 elif action == 'edit':
-    dest = page_path(name, args.platform, args.language)
     checkout(args.branch)
-    sh(f'{editor} {dest}')
-    sh(f'tldrl -v {dest}')
+    sh(f'{editor} {page_path}')
+    sh(f'tldrl -v {page_path}')
     sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
     sh(f'git push -u origin {args.branch}')
 elif action == 'rawedit':
@@ -154,9 +151,9 @@ elif action in ['fetch-origin', 'fo']:
     run_open(f'https://github.com/{username}/tldr/branches/fetch_and_merge/main')
 elif action in ['view', 'open']:
     # TODO: SOMEHOW make this EDITOR agnostic
-    sh(f'view {page_path(name, args.platform, args.language)}')
+    sh(f'view {page_path}')
 elif action in ['cat']:
-    sh(f'cat {page_path(name, args.platform, args.language)}')
+    sh(f'cat {page_path}')
 elif action in ['delete', 'remove']:
     # this name might be kinda misleading for beginners, but usually tldr pages are never removed
     # TODO: document this in the help or README
