@@ -151,7 +151,7 @@ elif action in ['view', 'open']:
     sh(f'view {page_path}')
 elif action in ['cat']:
     sh(f'cat {page_path}')
-elif action in ['delete', 'remove']:
+elif action in ['delete', 'del', 'remove', 'rm']:
     # this name might be kinda misleading for beginners, but usually tldr pages are never removed
     # TODO: document this in the help or README
     sh(f'git branch -D {name} && git push -d origin {name}')
