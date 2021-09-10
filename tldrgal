@@ -2,6 +2,7 @@
 # TODO: translated templates
 # TODO: `translate` action
 # TODO: implement -m
+# TODO: new alias syntax: python3=python
 from argparse import ArgumentParser
 from functools import reduce
 from os import path, chdir
@@ -12,7 +13,7 @@ from tldrlib import *
 from urllib.parse import urlencode
 import platform
 
-__version__ = '1.1-rc2'
+__version__ = '1.1-rc3'
 
 home = getenv('HOME')
 editor = getenv('EDITOR', 'vi')
@@ -29,7 +30,7 @@ def checkout(branch):
     if branch in sh('git branch', stdout=PIPE).stdout.decode('utf-8'):
         sh(f'git checkout {branch} && git pull')
     else:
-        sh(f'git checkout main && git pull && git checkout -b {branch}')
+        sh(f'git checkout -b {branch}')
 
 def page_path(name, platform, lang):
     dest = 'pages' if lang is None or lang == 'en' else f'pages.{lang}'
@@ -51,14 +52,16 @@ if not path.isdir(folder):
     print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
     exit(1)
 chdir(folder)
+sh('git checkout main && git pull')
 
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
 
 action = argv[1]
 del argv[1]
+name = target = 'error'
 
-if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'version', 'help']:
+if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'version', 'help', 'fetch-origin', 'fo']:
     name = argv[1]
     del argv[1]
 
@@ -67,15 +70,20 @@ if action == 'alias':
     del argv[1]
 
 parser = ArgumentParser()
+parser.add_argument('-b', '--branch')
 parser.add_argument('-l', '--language')
-parser.add_argument('-p', '--platform', default='common')
 parser.add_argument('-m', '--commit-message')
+parser.add_argument('-p', '--platform', default='common')
 args = parser.parse_args()
+
+if args.branch is None:
+    args.branch = name.replace('+', 'x')
 
 if action in ['--version', '-v', '-V', 'version']:
     print(f'tldrgal {__version__} by pixel, chrissx Media')
 elif action in ['--help', '-h', '-H', 'help']:
-    print('tldrgal [action] [...] [-lpm]')
+    # TODO: maybe use os.path.basename(argv[0])
+    print('tldrgal [action] [...] [-blmp]')
     print()
     print('tldrgal add [name]')
     print('tldrgal alias [name] [target]')
@@ -84,8 +92,8 @@ elif action in ['--help', '-h', '-H', 'help']:
     print('tldrgal request [name]')
     print('tldrgal multi-request [names]')
     print()
-    print('--help, -h, -H       Display this help')
-    print('--version, -v, -V    Display information about this program')
+    print('help, --help, -h, -H          Display this help')
+    print('version, --version, -v, -V    Display information about this program')
     print()
     print('TODO: HELP')
 elif action == 'missing':
@@ -96,7 +104,7 @@ elif action == 'missing':
             print(p)
 elif action in ['add', 'new', 'create']:
     dest = page_path(name, args.platform, args.language)
-    checkout(name)
+    checkout(args.branch)
     with open(dest, 'w') as f:
         f.write(f'# {name}\n\n'
                 '> DESC\n'
@@ -106,31 +114,31 @@ elif action in ['add', 'new', 'create']:
     sh(f'{editor} {dest}')
     sh(f'tldrl -v {dest}')
     sh(f'git add -A && git commit -m "{name}: add page"')
-    sh(f'git push -u origin {name}')
+    sh(f'git push -u origin {args.branch}')
 elif action == 'alias':
     dest = page_path(name, args.platform, args.language)
-    checkout(name)
+    checkout(args.branch)
     with open(dest, 'w') as f:
         f.write(f'# {name}\n\n'
                 f'> This command is an alias of `{target}`.\n\n'
                 '- View documentation for the original command:\n\n'
                 f'`tldr {target}`\n')
     sh(f'git add -A && git commit -m "{name}: add page"')
-    sh(f'git push -u origin {name}')
+    sh(f'git push -u origin {args.branch}')
     params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
-    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{name}?' + params)
+    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
 elif action == 'edit':
     dest = page_path(name, args.platform, args.language)
-    checkout(name)
+    checkout(args.branch)
     sh(f'{editor} {dest}')
     sh(f'tldrl -v {dest}')
     sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
-    sh(f'git push -u origin {name}')
+    sh(f'git push -u origin {args.branch}')
 elif action == 'rawedit':
-    checkout(name)
+    checkout(args.branch)
     sh(shell)
     sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
-    sh(f'git push -u origin {name}')
+    sh(f'git push -u origin {args.branch}')
 elif action == 'request':
     new_issue({'title': f'page request: {name}'})
 elif action == 'multi-request':
@@ -139,20 +147,19 @@ elif action == 'multi-request':
     title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, pages)
     body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', pages))
     new_issue({'title': title, 'body': body})
+    # all actions below are undocumented TODO: document
 elif action in ['find', 'fd']:
-    checkout('main')
     sh(f'fd \'{name}\'')
 elif action in ['fetch-origin', 'fo']:
     run_open(f'https://github.com/{username}/tldr/branches/fetch_and_merge/main')
 elif action in ['view', 'open']:
-    checkout('main')
+    # TODO: SOMEHOW make this EDITOR agnostic
     sh(f'view {page_path(name, args.platform, args.language)}')
 elif action in ['cat']:
-    checkout('main')
     sh(f'cat {page_path(name, args.platform, args.language)}')
 elif action in ['delete', 'remove']:
     # this name might be kinda misleading for beginners, but usually tldr pages are never removed
-    checkout('main')
+    # TODO: document this in the help or README
     sh(f'git branch -D {name} && git push -d origin {name}')
 else:
     print('Unknown action.')
