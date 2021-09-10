@@ -2,7 +2,6 @@
 # TODO: translated templates
 # TODO: `translate` action
 # TODO: implement -m
-# TODO: new alias syntax: python3=python
 from argparse import ArgumentParser
 from functools import reduce
 from os import path, chdir
@@ -13,7 +12,7 @@ from urllib.parse import urlencode
 from platform import system
 from tldrlib import *
 
-__version__ = '1.1-rc3'
+__version__ = '1.1-rc4'
 
 home = getenv('HOME')
 editor = getenv('EDITOR', 'vi')
@@ -55,14 +54,10 @@ if 'tldrl' not in get_all_installed_programs():
 
 action = argv[1]
 del argv[1]
-name = target = 'error'
+name = 'error'
 
 if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'version', 'help', 'fetch-origin', 'fo']:
     name = argv[1]
-    del argv[1]
-
-if action == 'alias':
-    target = argv[1]
     del argv[1]
 
 parser = ArgumentParser()
@@ -73,7 +68,7 @@ parser.add_argument('-p', '--platform', default='common')
 args = parser.parse_args()
 
 if args.branch is None:
-    args.branch = name.replace('+', 'x')
+    args.branch = name.replace('+', 'x').split('=')[0]
 
 page_path = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
 page_path += f'/{args.platform}/{name}.md'
@@ -115,6 +110,8 @@ elif action in ['add', 'new', 'create']:
     sh(f'git push -u origin {args.branch}')
 elif action == 'alias':
     # TODO: translations with automatic check for which pages of the target exist
+    #       (that needs a markdown parser, which is an...interesting problem
+    [name, target] = name.split('=')
     checkout(args.branch)
     with open(page_path, 'w') as f:
         f.write(f'# {name}\n\n'
