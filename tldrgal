@@ -12,11 +12,13 @@ from urllib.parse import urlencode
 from platform import system
 from tldrlib import *
 
-__version__ = '1.1-rc4'
+__version__ = '1.1-rc5'
 
 home = getenv('HOME')
 editor = getenv('EDITOR', 'vi')
 shell = getenv('SHELL', 'bash')
+with open(f'{home}/.config/tldrgal/username') as f:
+    username = f.readline().strip()
 
 def sh(cmd, **kwargs):
     return run(cmd, shell=True, check=True, **kwargs)
@@ -35,11 +37,9 @@ def new_issue(params):
     params['labels'] = 'help wanted,new command'
     run_open('https://github.com/tldr-pages/tldr/issues/new?' + urlencode(params))
 
-with open(f'{home}/.config/tldrgal/username') as f:
-    username = f.readline().strip()
-
 folder = home + '/.cache/tldrgal-temp-tldr'
 if not path.exists(folder):
+    # TODO: improve this message or document it away
     input('Please make sure, you have created your fork, before saving. (Enter to acknowledge)')
     sh(f'git clone {TLDR_REPO} {folder}')
     sh(f'cd {folder} && git remote set-url origin https://github.com/{username}/tldr.git')
@@ -59,6 +59,12 @@ name = 'error'
 if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'version', 'help', 'fetch-origin', 'fo']:
     name = argv[1]
     del argv[1]
+
+if action in ['request', 'req', 'alias']:
+    while argv[1][0] != '-':
+        name += ' ' + argv[1]
+        del argv[1]
+    name = split(' |,|;|:', name)
 
 parser = ArgumentParser()
 parser.add_argument('-b', '--branch')
@@ -80,11 +86,11 @@ elif action in ['--help', '-h', '-H', 'help']:
     print(f'{argv0} [action] [...] [-blmp]')
     print()
     print(f'{argv0} add [name]')
-    print(f'{argv0} alias [name]=[target]')
+    print(f'{argv0} alias [name]=[target] ...')
     print(f'{argv0} edit [name]')
+    print(f'{argv0} missing')
     print(f'{argv0} rawedit [name]')
-    print(f'{argv0} request [name]')
-    print(f'{argv0} multi-request [names]')
+    print(f'{argv0} request [name] ...')
     print()
     print('help, --help, -h, -H          Display this help')
     print('version, --version, -v, -V    Display information about this program')
@@ -110,18 +116,21 @@ elif action in ['add', 'new', 'create']:
     sh(f'git push -u origin {args.branch}')
 elif action == 'alias':
     # TODO: translations with automatic check for which pages of the target exist
-    #       (that needs a markdown parser, which is an...interesting problem
-    [name, target] = name.split('=')
-    checkout(args.branch)
-    with open(page_path, 'w') as f:
-        f.write(f'# {name}\n\n'
-                f'> This command is an alias of `{target}`.\n\n'
-                '- View documentation for the original command:\n\n'
-                f'`tldr {target}`\n')
-    sh(f'git add -A && git commit -m "{name}: add page"')
-    sh(f'git push -u origin {args.branch}')
-    params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
-    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
+    #       (that needs a markdown parser, which is an...interesting problem)
+    # TODO: we might want to check if len(name) = 2 => f'{name[0]}={name[1]}'
+    # TODO: fix these damn names
+    for name in name:
+        [name, target] = name.split('=')
+        checkout(args.branch)
+        with open(page_path, 'w') as f:
+            f.write(f'# {name}\n\n'
+                    f'> This command is an alias of `{target}`.\n\n'
+                    '- View documentation for the original command:\n\n'
+                    f'`tldr {target}`\n')
+        sh(f'git add -A && git commit -m "{name}: add page"')
+        sh(f'git push -u origin {args.branch}')
+        params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
+        run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
 elif action == 'edit':
     checkout(args.branch)
     sh(f'{editor} {page_path}')
@@ -133,15 +142,14 @@ elif action == 'rawedit':
     sh(shell)
     sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
     sh(f'git push -u origin {args.branch}')
-elif action == 'request':
-    new_issue({'title': f'page request: {name}'})
-elif action == 'multi-request':
-    # TODO: support space separated names without quotes
-    pages = split(' |,|;|:', name)
-    title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, pages)
-    body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', pages))
-    new_issue({'title': title, 'body': body})
-    # all actions below are undocumented TODO: document
+elif action in ['request', 'req']:
+    if len(name) == 1:
+        new_issue({'title': f'page request: {name}'})
+    else:
+        title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, name)
+        body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', name))
+        new_issue({'title': title, 'body': body})
+# all actions below are undocumented TODO: document
 elif action in ['find', 'fd']:
     sh(f'fd \'{name}\'')
 elif action in ['fetch-origin', 'fo']:
