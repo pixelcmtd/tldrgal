@@ -38,17 +38,20 @@ def new_issue(params):
     params['labels'] = 'help wanted,new command'
     run_open('https://github.com/tldr-pages/tldr/issues/new?' + urlencode(params))
 
-folder = home + '/.cache/tldrgal-temp-tldr'
+folder = home + '/.cache/tldr'
 if not path.exists(folder):
-    # TODO: improve this message or document it away
-    input('Please make sure, you have created your fork, before saving. (Enter to acknowledge)')
-    sh(f'git clone {TLDR_REPO} {folder}')
-    sh(f'cd {folder} && git remote set-url origin https://github.com/{username}/tldr.git')
-if not path.isdir(folder):
+    # TODO: document this message away
+    input('Please make sure, you have created your fork, then press enter.')
+    sh(f'git clone https://github.com/{username}/tldr.git {folder}')
+    chdir(folder)
+    sh('git remote add upstream https://github.com/tldr-pages/tldr.git')
+elif not path.isdir(folder):
     print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
     exit(1)
-chdir(folder)
-sh('git checkout main && git pull')
+else:
+    chdir(folder)
+    sh('git checkout main')
+    sh('git pull --ff-only')
 
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
