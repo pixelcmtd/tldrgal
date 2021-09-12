@@ -103,6 +103,7 @@ elif action == 'missing':
         if not '.' in p:
             print(p)
 elif action in ['add', 'new', 'create']:
+    # TODO: translated templates
     checkout(args.branch)
     with open(page_path, 'w') as f:
         f.write(f'# {name}\n\n'
@@ -117,20 +118,23 @@ elif action in ['add', 'new', 'create']:
 elif action == 'alias':
     # TODO: translations with automatic check for which pages of the target exist
     #       (that needs a markdown parser, which is an...interesting problem)
-    # TODO: we might want to check if len(name) = 2 => f'{name[0]}={name[1]}'
-    # TODO: fix these damn names
+    # TODO: we might want to check if len(name) % 2 == 0 => f'{name[0]}={name[1]}' ...
+    # TODO: fix these damn names (i mean we have 3 vars that are called `name` here)
+    # TODO: support `-m` somehow
+    checkout(args.branch)
     for name in name:
         [name, target] = name.split('=')
-        checkout(args.branch)
         with open(page_path, 'w') as f:
             f.write(f'# {name}\n\n'
                     f'> This command is an alias of `{target}`.\n\n'
                     '- View documentation for the original command:\n\n'
                     f'`tldr {target}`\n')
-        sh(f'git add -A && git commit -m "{name}: add page"')
-        sh(f'git push -u origin {args.branch}')
-        params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
-        run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
+        sh(f'git add {page_path}')
+        sh(f'git commit -m "{name}: add page"')
+    sh(f'git push -u origin {args.branch}')
+    params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
+    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
+    sh('git checkout main')
 elif action == 'edit':
     checkout(args.branch)
     sh(f'{editor} {page_path}')
