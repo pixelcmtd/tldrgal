@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-# TODO: translated templates
 # TODO: `translate` action
-# TODO: implement -m
 from argparse import ArgumentParser
 from functools import reduce
 from os import path, chdir
@@ -27,9 +25,10 @@ def run_open(arg):
     return run(['xdg-open' if 'linux' in system().lower() else 'open', arg], check=True)
 
 def checkout(branch):
-    """checks out main, then checks out `branch`, using -b if it doesn't exist"""
+    """checks out `branch`, using -b if it doesn't exist, pulling otherwise"""
     if branch in sh('git branch', stdout=PIPE).stdout.decode('utf-8'):
-        sh(f'git checkout {branch} && git pull')
+        sh(f'git checkout {branch}')
+        sh('git pull --ff-only')
     else:
         sh(f'git checkout -b {branch}')
 
@@ -69,7 +68,8 @@ if action in ['request', 'req', 'alias']:
 parser = ArgumentParser()
 parser.add_argument('-b', '--branch')
 parser.add_argument('-l', '--language')
-parser.add_argument('-m', '--commit-message')
+parser.add_argument('-m', '--commit-message', default=
+        f'{name}: add page' if action in ['add', 'new', 'create'] else f'{name}: ')
 parser.add_argument('-p', '--platform', default='common')
 args = parser.parse_args()
 
@@ -113,8 +113,10 @@ elif action in ['add', 'new', 'create']:
                 '`' + name + ' {{arg1}} {{arg2}}`\n')
     sh(f'{editor} {page_path}')
     sh(f'tldrl -v {page_path}')
-    sh(f'git add -A && git commit -m "{name}: add page"')
+    sh(f'git add {page_path}')
+    sh(f'git commit -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
+    sh('git checkout main')
 elif action == 'alias':
     # TODO: translations with automatic check for which pages of the target exist
     #       (that needs a markdown parser, which is an...interesting problem)
@@ -139,13 +141,17 @@ elif action == 'edit':
     checkout(args.branch)
     sh(f'{editor} {page_path}')
     sh(f'tldrl -v {page_path}')
-    sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
+    sh(f'git add {page_path}')
+    sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
+    sh('git checkout main')
 elif action == 'rawedit':
     checkout(args.branch)
     sh(shell)
-    sh(f'git add -A && GIT_EDITOR={editor} git commit -e -m "{name}: "')
+    sh('git add -A')
+    sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
+    sh('git checkout main')
 elif action in ['request', 'req']:
     if len(name) == 1:
         new_issue({'title': f'page request: {name}'})
