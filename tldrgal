@@ -10,7 +10,7 @@ from urllib.parse import urlencode
 from platform import system
 from tldrlib import *
 
-__version__ = '1.1-rc5'
+__version__ = '2.0-dev'
 
 home = getenv('HOME')
 editor = getenv('EDITOR', 'vi')
@@ -19,6 +19,8 @@ with open(f'{home}/.config/tldrgal/username') as f:
     username = f.readline().strip()
 
 def sh(cmd, **kwargs):
+    # TODO: --quiet
+    print(cmd)
     return run(cmd, shell=True, check=True, **kwargs)
 
 def run_open(arg):
@@ -55,7 +57,7 @@ action = argv[1]
 del argv[1]
 name = 'error'
 
-if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'version', 'help', 'fetch-origin', 'fo']:
+if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'version', 'help', 'update', 'fetch-origin', 'fo']:
     name = argv[1]
     del argv[1]
 
@@ -162,8 +164,6 @@ elif action in ['request', 'req']:
 # all actions below are undocumented TODO: document
 elif action in ['find', 'fd']:
     sh(f'fd \'{name}\'')
-elif action in ['fetch-origin', 'fo']:
-    run_open(f'https://github.com/{username}/tldr/branches/fetch_and_merge/main')
 elif action in ['view', 'open']:
     # TODO: SOMEHOW make this EDITOR agnostic
     sh(f'view {page_path}')
@@ -172,7 +172,12 @@ elif action in ['cat']:
 elif action in ['delete', 'del', 'remove', 'rm']:
     # this name might be kinda misleading for beginners, but usually tldr pages are never removed
     # TODO: document this in the help or README
-    sh(f'git branch -D {name} && git push -d origin {name}')
+    sh(f'git branch -D {name}')
+    sh(f'git push -d origin {name}')
+elif action in ['update', 'fetch-origin', 'fo']:
+    sh('git fetch upstream')
+    sh('git merge upstream/main')
+    sh('git push')
 else:
     print('Unknown action.')
     exit(1)
