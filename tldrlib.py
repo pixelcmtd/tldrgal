@@ -3,12 +3,9 @@
 from os import getenv, walk
 from subprocess import run, PIPE
 
-TLDR_HEAD = getenv('HOME') + '/.tldrc/tldr-master/pages'
-TLDR_REPO = 'https://github.com/tldr-pages/tldr.git'
-
-def has_tldr(prog: str) -> bool:
-    """Checks, wheather `prog` has a tldr page. `prog` must not contain special regex characters."""
-    return run(f'fd {prog} {TLDR_HEAD}', stdout=PIPE, check=False, shell=True).stdout.strip() != b''
+def has_tldr(prog: str, head: str) -> bool:
+    """Checks, wheather `prog` has a page in `head`. `prog` must not contain special regex characters."""
+    return run(f'fd {prog} {head}', stdout=PIPE, check=False, shell=True).stdout.strip() != b''
 
 def get_all_installed_programs() -> set:
     """This has nothing to do with tldr, but it's useful."""
@@ -18,9 +15,9 @@ def get_all_installed_programs() -> set:
             s.update(f)
     return s
 
-def get_all_tldr_pages() -> set:
-    """Gets all tldr pages from TLDR_HEAD."""
+def get_all_tldr_pages(head: str) -> set:
+    """Gets all tldr pages from `head`."""
     s = set()
-    for _, _, f in walk(TLDR_HEAD):
+    for _, _, f in walk(head):
         s.update([f.replace('.md', '') for f in f])
     return s

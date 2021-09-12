@@ -97,7 +97,7 @@ elif action in ['--help', '-h', '-H', 'help']:
     print()
     # TODO: HELP
 elif action == 'missing':
-    l = list(get_all_installed_programs() - get_all_tldr_pages())
+    l = list(get_all_installed_programs() - get_all_tldr_pages('pages'))
     l.sort()
     for p in l:
         if not '.' in p:
