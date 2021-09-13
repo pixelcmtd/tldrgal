@@ -187,6 +187,10 @@ elif action in ['update', 'fetch-origin', 'fo']:
     sh('git fetch upstream')
     sh('git merge upstream/main')
     sh('git push')
+# TODO: document all below
+elif action == 'grep':
+    # TODO: support a custom dir
+    sh(f'grep --color=always --exclude-dir=.git -R -- \'{name}\' .')
 else:
     print('Unknown action.')
     exit(1)
