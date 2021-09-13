@@ -67,7 +67,7 @@ if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'ver
     del argv[1]
 
 if action in ['request', 'req', 'alias']:
-    while argv[1][0] != '-':
+    while len(argv) >= 2 and argv[1][0] != '-':
         name += ' ' + argv[1]
         del argv[1]
     name = split(' |,|;|:', name)
@@ -81,7 +81,7 @@ parser.add_argument('-p', '--platform', default='common')
 args = parser.parse_args()
 
 if args.branch is None:
-    args.branch = name.replace('+', 'x').split('=')[0]
+    args.branch = (name if name is str else reduce(lambda x, y: x + ',' + y, name)).replace('+', 'x').split('=')[0]
 
 page_path = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
 page_path += f'/{args.platform}/{name}.md'
@@ -166,7 +166,7 @@ elif action == 'rawedit':
     sh('git checkout main')
 elif action in ['request', 'req']:
     if len(name) == 1:
-        new_issue({'title': f'page request: {name}'})
+        new_issue({'title': f'page request: {name[0]}'})
     else:
         title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, name)
         body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', name))
