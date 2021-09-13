@@ -24,25 +24,60 @@ Either clone this repo and add it to your `PATH` (recommended) or just drop the
 Now you can create new pages:
 
 ```
-tldrgal add command
+tldrgal add [command]
 ```
 
 And alias pages:
 
 ```
-tldrgal alias alias-command target-command
+tldrgal alias python3=python
 ```
 
 Request pages:
 
 ```
-tldrgal request command
-tldrgal multi-request command1,command2
+tldrgal request [command]
+tldrgal request llc,lli,llvm-config
 ```
 
-And edit pages and other parts of `tldr`:
+Edit pages and other parts of `tldr`:
 
 ```
-tldrgal edit command
-tldrgal rawedit branch-name
+tldrgal edit [command]
+tldrgal rawedit [branch-name]
+```
+
+List all commands on your system that don't have a `tldr` page yet:
+
+```
+tldrgal missing
+```
+
+Find all files in `tldr` that match a regex (useful for example for finding all
+languages that a page has been translated to):
+
+```
+tldrgal find 'llvm-.*'
+tldrgal find vim
+```
+
+View a page (currently uses `view`, which is installed by `vim`):
+
+```
+tldrgal view vim
+```
+
+Remove branches:
+
+```
+tldrgal delete [branch]
+tldrgal remove clangxx
+tldrgal del vim
+tldrgal rm tldr
+```
+
+And update your fork with upstream changes:
+
+```
+tldrgal update
 ```
