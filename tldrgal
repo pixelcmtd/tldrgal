@@ -75,7 +75,7 @@ if not path.exists(folder):
 elif not path.isdir(folder):
     print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
     exit(1)
-else:
+elif action not in ['help', 'version', 'request', 'rm']:
     chdir(folder)
     sh('git checkout main')
     sh('git pull --ff-only')
@@ -142,7 +142,7 @@ elif action == 'add':
     sh(f'{editor} {page_path}')
     sh(f'tldrl -v {page_path}')
     sh(f'git add {page_path}')
-    sh(f'git commit -m "{args.commit_message}"')
+    sh(f'git commit -m \'{args.commit_message}\'')
     sh(f'git push -u origin {args.branch}')
     sh('git checkout main')
 elif action == 'alias':
@@ -160,7 +160,7 @@ elif action == 'alias':
                     '- View documentation for the original command:\n\n'
                     f'`tldr {target}`\n')
         sh(f'git add {page_path}')
-        sh(f'git commit -m "{name}: add page"')
+        sh(f'git commit -m \'{name}: add page\'')
     sh(f'git push -u origin {args.branch}')
     params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
     run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
