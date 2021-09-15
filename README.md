@@ -1,10 +1,10 @@
 # `tldrgal`
 
 A general Werkzeugkasten to help you contribute to
-[`tldr`](https://github.com/tldr-pages/tldr), similar to Homebrew's tools like
+[`tldr`](https://github.com/tldr-pages/tldr), inspired by Homebrew's
 `create`, `edit`, `bump-formula-pr` and `bump-cask-pr`.
 
-## Usage
+## Setup
 
 Create a file in your home under `.config/tldrgal/username` with your GitHub
 username, like this:
@@ -21,39 +21,35 @@ Since we aren't on PyPI right now, installing `tldrgal` itself is a bit manual:
 Either clone this repo and add it to your `PATH` (recommended) or just drop the
 `tldrgal` script into some directory from your `PATH`.
 
-Now you can create new pages:
+## Usage
 
-```
-tldrgal add [command]
-```
+- Now you can create new pages:
 
-And alias pages:
+`tldrgal add {{obscure_command}}`
 
-```
-tldrgal alias python3=python
-```
+- And alias pages:
 
-Request pages:
+`tldrgal alias {{python3}}={{python}}`
+
+- Request pages:
 
 ```
 tldrgal request [command]
 tldrgal request llc,lli,llvm-config
 ```
 
-Edit pages and other parts of `tldr`:
+- Edit pages and other parts of `tldr`:
 
 ```
 tldrgal edit [command]
 tldrgal rawedit [branch-name]
 ```
 
-List all commands on your system that don't have a `tldr` page yet:
+- List all commands on your system that don't have a `tldr` page yet:
 
-```
-tldrgal missing
-```
+`tldrgal missing`
 
-Find all files in `tldr` that match a regex (useful for example for finding all
+- Find all files in `tldr` that match a regex (useful for example for finding all
 languages that a page has been translated to):
 
 ```
@@ -61,23 +57,14 @@ tldrgal find 'llvm-.*'
 tldrgal find vim
 ```
 
-View a page (currently uses `view`, which is installed by `vim`):
+- View a page (currently uses `view`, which is installed by `vim`):
 
-```
-tldrgal view vim
-```
+`tldrgal view vim`
 
-Remove branches:
+- Remove branches:
 
-```
-tldrgal delete [branch]
-tldrgal remove clangxx
-tldrgal del vim
-tldrgal rm tldr
-```
+`tldrgal rm {{clangxx}}`
 
-And update your fork with upstream changes:
+- Update your fork with upstream changes:
 
-```
-tldrgal update
-```
+`tldrgal update`
