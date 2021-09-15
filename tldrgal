@@ -6,7 +6,7 @@ from functools import reduce
 from os import path, chdir
 from re import split
 from subprocess import run, PIPE
-from sys import argv
+from sys import argv, stderr
 from urllib.parse import urlencode
 from platform import system
 from tldrlib import *
@@ -21,8 +21,7 @@ with open(f'{home}/.config/tldrgal/username') as f:
 
 def sh(cmd, **kwargs):
     # TODO: --quiet
-    # TODO: stderr
-    print(cmd)
+    print(cmd, file=stderr)
     return run(cmd, shell=True, check=True, **kwargs)
 
 def run_open(arg):
