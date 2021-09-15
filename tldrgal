@@ -80,7 +80,7 @@ parser.add_argument('-p', '--platform', default='common')
 args = parser.parse_args()
 
 if args.branch is None:
-    args.branch = (name if name is str else reduce(lambda x, y: x + ',' + y, name)).replace('+', 'x').split('=')[0]
+    args.branch = (name if isinstance(name, str) else reduce(lambda x, y: x + ',' + y, name)).replace('+', 'x').split('=')[0]
 
 page_path = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
 page_path += f'/{args.platform}/{name}.md'
