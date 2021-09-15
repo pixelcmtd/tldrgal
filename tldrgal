@@ -19,6 +19,32 @@ shell = getenv('SHELL', 'bash')
 with open(f'{home}/.config/tldrgal/username') as f:
     username = f.readline().strip()
 
+aliases = {
+    '--version': 'version',
+    '-v': 'version',
+    '-V': 'version',
+    'v': 'version',
+    'V': 'version',
+    '--help': 'help',
+    '-h': 'help',
+    '-H': 'help',
+    'h': 'help',
+    'H': 'help',
+    'new': 'add',
+    'create': 'add',
+    'req': 'request',
+    'fd': 'find',
+    'open': 'view',
+    'delete': 'rm',
+    'del': 'rm',
+    'fetch-origin': 'update',
+    'fo': 'update',
+}
+
+action = aliases[ac] if (ac := argv.pop(1)) in aliases else ac
+
+name = argv.pop(1) if action not in ['missing', 'update', 'help', 'version'] else 'error'
+
 def sh(cmd, **kwargs):
     # TODO: --quiet
     print(cmd, file=stderr)
@@ -57,18 +83,9 @@ else:
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
 
-action = argv[1]
-del argv[1]
-name = 'error'
-
-if action not in ['missing', '--version', '-v', '-V', '--help', '-h', '-H', 'version', 'help', 'update', 'fetch-origin', 'fo']:
-    name = argv[1]
-    del argv[1]
-
 if action in ['request', 'req', 'alias']:
     while len(argv) >= 2 and argv[1][0] != '-':
-        name += ' ' + argv[1]
-        del argv[1]
+        name += ' ' + argv.pop(1)
     name = split(' |,|;|:', name)
 
 parser = ArgumentParser()
@@ -85,9 +102,9 @@ if args.branch is None:
 page_path = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
 page_path += f'/{args.platform}/{name}.md'
 
-if action in ['--version', '-v', '-V', 'version']:
+if action == 'version':
     print(f'tldrgal {__version__} by pixel, chrissx Media')
-elif action in ['--help', '-h', '-H', 'help']:
+elif action == 'help':
     argv0 = path.basename(argv[0])
     print(f'{argv0} [action] [...] [-blmp]')
     print()
@@ -113,7 +130,7 @@ elif action == 'missing':
     for p in l:
         if not '.' in p:
             print(p)
-elif action in ['add', 'new', 'create']:
+elif action == 'add':
     # TODO: translated templates
     checkout(args.branch)
     with open(page_path, 'w') as f:
@@ -163,26 +180,26 @@ elif action == 'rawedit':
     sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
     sh('git checkout main')
-elif action in ['request', 'req']:
+elif action == 'request':
     if len(name) == 1:
         new_issue({'title': f'page request: {name[0]}'})
     else:
         title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, name)
         body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', name))
         new_issue({'title': title, 'body': body})
-elif action in ['find', 'fd']:
+elif action == 'find':
     sh(f'fd \'{name}\'')
-elif action in ['view', 'open']:
+elif action == 'view':
     # TODO: SOMEHOW make this EDITOR agnostic
     # TODO: also rethink it and maybe make `tldrgal` like half a `tldr` client
     sh(f'view {page_path}')
-elif action in ['cat']:
+elif action == 'cat':
     sh(f'cat {page_path}')
-elif action in ['delete', 'del', 'remove', 'rm']:
+elif action == 'rm':
     # TODO: support varargs
     sh(f'git branch -D {name}')
     sh(f'git push -d origin {name}')
-elif action in ['update', 'fetch-origin', 'fo']:
+elif action == 'update':
     sh('git fetch upstream')
     sh('git merge upstream/main')
     sh('git push')
