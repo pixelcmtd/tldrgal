@@ -53,9 +53,10 @@ action = aliases[ac] if (ac := argv.pop(1).lower()) in aliases else ac
 
 name = argv.pop(1) if action not in ['missing', 'update', 'help', 'version'] else 'error'
 
-def sh(cmd, **kwargs):
+def sh(cmd, quiet=False, **kwargs):
     # TODO: --quiet
-    print(cmd, file=stderr)
+    if not quiet:
+        print(cmd, file=stderr)
     return run(cmd, shell=True, check=True, **kwargs)
 
 def run_open(arg):
@@ -63,7 +64,7 @@ def run_open(arg):
 
 def checkout(branch):
     """checks out `branch`, using -b if it doesn't exist, pulling otherwise"""
-    if branch in sh('git branch', stdout=PIPE).stdout.decode('utf-8'):
+    if branch in sh('git branch', quiet=True, stdout=PIPE).stdout.decode('utf-8'):
         sh(f'git checkout {branch}')
         sh('git pull --ff-only')
     else:
