@@ -4,6 +4,17 @@ A general Werkzeugkasten to help you contribute to
 [`tldr`](https://github.com/tldr-pages/tldr), inspired by Homebrew's
 `create`, `edit`, `bump-formula-pr` and `bump-cask-pr`.
 
+## Dependencies
+
+- Python 3 (just use the newest one)
+- `fd`
+- `$SHELL` or `bash`
+- `$EDITOR` or `vi`
+- `view`
+- `xdg-open` on Linux, `open` otherwise
+- `git`
+- `npm`
+
 ## Setup
 
 Create a file in your home under `.config/tldrgal/username` with your GitHub
