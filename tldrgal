@@ -42,9 +42,14 @@ aliases = {
     '--update': 'update',
     'fetch-origin': 'update',
     'fo': 'update',
+    'co': 'checkout',
+    'ch': 'checkout',
+    'raw-edit': 'rawedit',
+    'quick-edit': 'quickedit',
+    # TODO: one-letter abbrs for all commands
 }
 
-action = aliases[ac] if (ac := argv.pop(1)) in aliases else ac
+action = aliases[ac] if (ac := argv.pop(1).lower()) in aliases else ac
 
 name = argv.pop(1) if action not in ['missing', 'update', 'help', 'version'] else 'error'
 
