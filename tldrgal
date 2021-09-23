@@ -103,10 +103,12 @@ parser.add_argument('-l', '--language')
 parser.add_argument('-m', '--commit-message', default=
         f'{name}: add page' if action == 'add' else f'{name}: ')
 parser.add_argument('-p', '--platform', default='common')
+# TODO: `-c`/`--command` for rawedit
 args = parser.parse_args()
 
 if args.branch is None:
-    args.branch = (name if isinstance(name, str) else reduce(lambda x, y: x + ',' + y, name)).replace('+', 'x').split('=')[0]
+    args.branch = name if isinstance(name, str) else reduce(lambda x, y: x + ',' + y, name)
+    args.branch = args.branch.replace('+', 'x').split('=')[0]
 
 def page_path(n=name):
     p = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
@@ -122,12 +124,14 @@ elif action == 'help':
     print(f'{argv0} alias [name]=[target] ...')
     print(f'{argv0} edit [name]')
     print(f'{argv0} missing')
-    print(f'{argv0} rawedit [name]')
+    print(f'{argv0} rawedit [branch]')
     print(f'{argv0} request [name] ...')
-    print(f'{argv0} find [name]')
+    print(f'{argv0} find [regex]')
     print(f'{argv0} view [name]')
     print(f'{argv0} cat [name]')
-    print(f'{argv0} rm [name]')
+    print(f'{argv0} rm [branch]')
+    print(f'{argv0} grep [regex]')
+    print(f'{argv0} checkout [branch]')
     print(f'{argv0} update')
     print()
     print('help, --help, -h, -H          Display this help')
