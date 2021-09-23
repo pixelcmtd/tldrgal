@@ -77,6 +77,14 @@ languages that a page has been translated to):
 
 `tldrgal rm {{clangxx}}`
 
+- Grep in all files from `tldr`:
+
+`tldrgal grep "{{bad.*user}}"`
+
+- Check out a specific branch without doing anything else:
+
+`tldrgal checkout {{my-branch}}`
+
 - Update your fork with upstream changes:
 
 `tldrgal update`
