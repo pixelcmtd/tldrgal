@@ -108,8 +108,9 @@ args = parser.parse_args()
 if args.branch is None:
     args.branch = (name if isinstance(name, str) else reduce(lambda x, y: x + ',' + y, name)).replace('+', 'x').split('=')[0]
 
-page_path = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
-page_path += f'/{args.platform}/{name}.md'
+def page_path(n=name):
+    p = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
+    return p + f'/{args.platform}/{n}.md'
 
 if action == 'version':
     print(f'tldrgal {__version__} by pixel, chrissx Media')
@@ -141,16 +142,17 @@ elif action == 'missing':
             print(p)
 elif action == 'add':
     # TODO: translated templates
+    # TODO: support varargs
     checkout(args.branch)
-    with open(page_path, 'w') as f:
+    with open(page_path(), 'w') as f:
         f.write(f'# {name}\n\n'
                 '> DESC\n'
                 '> More information: <insert>.\n\n'
                 '- Example1:\n\n'
                 '`' + name + ' {{arg1}} {{arg2}}`\n')
-    sh(f'{editor} {page_path}')
-    sh(f'tldrl -v {page_path}')
-    sh(f'git add {page_path}')
+    sh(f'{editor} {page_path()}')
+    sh(f'tldrl -v {page_path()}')
+    sh(f'git add {page_path()}')
     sh(f'git commit -m \'{args.commit_message}\'')
     sh(f'git push -u origin {args.branch}')
     sh('git checkout main')
@@ -163,12 +165,12 @@ elif action == 'alias':
     checkout(args.branch)
     for name in name:
         [name, target] = name.split('=')
-        with open(page_path, 'w') as f:
+        with open(page_path(name), 'w') as f:
             f.write(f'# {name}\n\n'
                     f'> This command is an alias of `{target}`.\n\n'
                     '- View documentation for the original command:\n\n'
                     f'`tldr {target}`\n')
-        sh(f'git add {page_path}')
+        sh(f'git add {page_path(name)}')
         sh(f'git commit -m \'{name}: add page\'')
     sh(f'git push -u origin {args.branch}')
     params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
@@ -176,12 +178,14 @@ elif action == 'alias':
     sh('git checkout main')
 elif action == 'edit':
     checkout(args.branch)
-    sh(f'{editor} {page_path}')
-    sh(f'tldrl -v {page_path}')
-    sh(f'git add {page_path}')
+    sh(f'{editor} {page_path()}')
+    sh(f'tldrl -v {page_path()}')
+    sh(f'git add {page_path()}')
     sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
     sh('git checkout main')
+    # TODO: open PR page
+    # TODO: `quickedit` for editing existing PRs
 elif action == 'rawedit':
     checkout(args.branch)
     sh(shell)
@@ -189,6 +193,7 @@ elif action == 'rawedit':
     sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
     sh('git checkout main')
+    # TODO: open PR page
 elif action == 'request':
     if len(name) == 1:
         new_issue({'title': f'page request: {name[0]}'})
@@ -201,9 +206,9 @@ elif action == 'find':
 elif action == 'view':
     # TODO: SOMEHOW make this EDITOR agnostic
     # TODO: also rethink it and maybe make `tldrgal` like half a `tldr` client
-    sh(f'view {page_path}')
+    sh(f'view {page_path()}')
 elif action == 'cat':
-    sh(f'cat {page_path}')
+    sh(f'cat {page_path()}')
 elif action == 'rm':
     # TODO: support varargs
     sh(f'git branch -D {name}')
