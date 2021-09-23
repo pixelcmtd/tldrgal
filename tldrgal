@@ -221,10 +221,11 @@ elif action == 'update':
     sh('git fetch upstream')
     sh('git merge upstream/main')
     sh('git push')
-# TODO: document all below
 elif action == 'grep':
     # TODO: support a custom dir
     sh(f'grep --color=always --exclude-dir=.git -R -- \'{name}\' .')
+elif action == 'checkout':
+    checkout(name)
 else:
     print('Unknown action.')
     exit(1)
