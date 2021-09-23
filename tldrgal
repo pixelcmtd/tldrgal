@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # TODO: `translate` action
 # TODO: put on pypi
+# TODO: revert to branch from before (very annoying and complicated to get right)
 from argparse import ArgumentParser
 from functools import reduce
 from os import path, chdir
@@ -37,6 +38,8 @@ aliases = {
     'open': 'view',
     'delete': 'rm',
     'del': 'rm',
+    '-u': 'update',
+    '--update': 'update',
     'fetch-origin': 'update',
     'fo': 'update',
 }
