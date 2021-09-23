@@ -27,9 +27,6 @@
 
 `tldrgal missing`
 
-- Find all files in `tldr` that match a regex (useful for example for finding all
-languages that a page has been translated to):
-
 - Find all pages that start with "llvm-":
 
 `tldrgal find llvm-`
