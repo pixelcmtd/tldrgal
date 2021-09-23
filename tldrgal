@@ -101,7 +101,7 @@ parser = ArgumentParser()
 parser.add_argument('-b', '--branch')
 parser.add_argument('-l', '--language')
 parser.add_argument('-m', '--commit-message', default=
-        f'{name}: add page' if action in ['add', 'new', 'create'] else f'{name}: ')
+        f'{name}: add page' if action == 'add' else f'{name}: ')
 parser.add_argument('-p', '--platform', default='common')
 args = parser.parse_args()
 
