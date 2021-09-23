@@ -29,15 +29,15 @@
 
 - Find all pages that start with "llvm-":
 
-`tldrgal find llvm-`
+`tldrgal find {{llvm-}}`
 
 - Find all translations of the `vim` page:
 
-`tldrgal find '^vim.md$'`
+`tldrgal find '^{{vim}}.md$'`
 
 - View a page (currently uses `view`, which is installed by `vim`):
 
-`tldrgal view vim`
+`tldrgal view {{vim}}`
 
 - Remove a branch:
 
