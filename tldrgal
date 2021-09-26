@@ -215,9 +215,7 @@ elif action == 'request':
 elif action == 'find':
     sh(f'fd \'{name}\'')
 elif action == 'view':
-    # TODO: SOMEHOW make this EDITOR agnostic
-    # TODO: also rethink it and maybe make `tldrgal` like half a `tldr` client
-    sh(f'view {page_path()}')
+    sh(f'tldr {name}')
 elif action == 'cat':
     # TODO: rethink this to maybe support $PAGER or something
     sh(f'cat {page_path()}')
