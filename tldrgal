@@ -121,7 +121,7 @@ if action == 'version':
     print(f'tldrgal {__version__} by pixel, chrissx Media')
 elif action == 'help':
     argv0 = path.basename(argv[0])
-    print(f'{argv0} [action] [...] [-blmp]')
+    print(f'{argv0} [action] [...] [-bclmp]')
     print()
     print(f'{argv0} add [name]')
     print(f'{argv0} alias [name]=[target] ...')
@@ -195,7 +195,7 @@ elif action == 'edit':
     # TODO: `quickedit` for editing existing PRs
 elif action == 'rawedit':
     checkout(args.branch)
-    sh(shell)
+    sh(args.command)
     sh('git add -A')
     sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
