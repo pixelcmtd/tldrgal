@@ -166,10 +166,14 @@ elif action == 'add':
 elif action == 'alias':
     # TODO: translations with automatic check for which pages of the target exist
     #       (that needs a markdown parser, which is an...interesting problem)
-    # TODO: we might want to check if len(name) % 2 == 0 => f'{name[0]}={name[1]}' ...
     # TODO: fix these damn names (i mean we have 3 vars that are called `name` here)
     # TODO: support `-m` somehow
     checkout(args.branch)
+    if len(name) % 2 == 0 and True not in ['=' in n for n in name]:
+        n = []
+        for i in range(0, len(name) / 2):
+            n.append(f'{name[i*2]}={name[i*2+1]}')
+        name = n
     for name in name:
         [name, target] = name.split('=')
         with open(page_path(name), 'w') as f:
