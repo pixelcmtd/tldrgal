@@ -2,6 +2,11 @@
 # TODO: `translate` action
 # TODO: put on pypi
 # TODO: revert to branch from before (very annoying and complicated to get right)
+# TODO: rawedit foreach with grep
+# TODO: think about silencing a lot of commands given mainly by the user
+# TODO: add-from-man
+# TODO: no-url flag for multi req
+# TODO: --base-directory
 from argparse import ArgumentParser
 from functools import reduce
 from os import path, chdir
@@ -23,14 +28,10 @@ with open(f'{home}/.config/tldrgal/username') as f:
 aliases = {
     '--version': 'version',
     '-v': 'version',
-    '-V': 'version',
     'v': 'version',
-    'V': 'version',
     '--help': 'help',
     '-h': 'help',
-    '-H': 'help',
     'h': 'help',
-    'H': 'help',
     'new': 'add',
     'create': 'add',
     'req': 'request',
@@ -54,7 +55,6 @@ action = aliases[ac] if (ac := argv.pop(1).lower()) in aliases else ac
 name = argv.pop(1) if action not in ['missing', 'update', 'help', 'version'] else 'error'
 
 def sh(cmd, quiet=False, **kwargs):
-    # TODO: --quiet
     if not quiet:
         print(cmd, file=stderr)
     return run(cmd, shell=True, check=True, **kwargs)
@@ -84,15 +84,16 @@ if not path.exists(folder):
 elif not path.isdir(folder):
     print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
     exit(1)
-elif action not in ['help', 'version', 'request', 'rm']:
-    chdir(folder)
-    sh('git checkout main')
+
+chdir(folder)
+sh('git checkout main', quiet=True, stdout=PIPE)
+if action not in ['help', 'version', 'request', 'rm']:
     sh('git pull --ff-only')
 
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
 
-if action in ['request', 'alias']:
+if action in ['request', 'alias', 'rm']:
     while len(argv) >= 2 and argv[1][0] != '-':
         name += ' ' + argv.pop(1)
     name = split(' |,|;|:', name)
@@ -103,7 +104,9 @@ parser.add_argument('-l', '--language')
 parser.add_argument('-m', '--commit-message', default=
         f'{name}: add page' if action == 'add' else f'{name}: ')
 parser.add_argument('-p', '--platform', default='common')
-# TODO: `-c`/`--command` for rawedit
+parser.add_argument('-c', '--command', default=shell)
+# TODO: `--template`/`-t` for `add`
+# TODO: `--quiet`/`-q` for `sh`
 args = parser.parse_args()
 
 if args.branch is None:
@@ -212,11 +215,12 @@ elif action == 'view':
     # TODO: also rethink it and maybe make `tldrgal` like half a `tldr` client
     sh(f'view {page_path()}')
 elif action == 'cat':
+    # TODO: rethink this to maybe support $PAGER or something
     sh(f'cat {page_path()}')
 elif action == 'rm':
-    # TODO: support varargs
-    sh(f'git branch -D {name}')
-    sh(f'git push -d origin {name}')
+    for name in name:
+        sh(f'git branch -D {name}')
+        sh(f'git push -d origin {name}')
 elif action == 'update':
     sh('git fetch upstream')
     sh('git merge upstream/main')
