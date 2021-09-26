@@ -2,6 +2,7 @@
 
 > Contribute to [`tldr`](https://github.com/tldr-pages/tldr).
 > Inspired by Homebrew's `create`, `edit`, `bump-formula-pr` and `bump-cask-pr`.
+> More information: <[INSTALL.md](INSTALL.md)>.
 
 - Create a new page:
 

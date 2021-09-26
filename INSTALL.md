@@ -9,11 +9,11 @@
 - `view`
 - `xdg-open` on Linux, `open` otherwise
 - `git`
-- `npm`
+- `npm` (or `tldrl` installed from another source)
 
 ## Setup
 
-Create a file in your home under `.config/tldrgal/username` with your GitHub
+Create a file called `~/.config/tldrgal/username` with your GitHub
 username, like this:
 
 ```sh
