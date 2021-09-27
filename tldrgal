@@ -62,9 +62,11 @@ def sh(cmd, quiet=False, **kwargs):
 def run_open(arg):
     return run(['xdg-open' if 'linux' in system().lower() else 'open', arg], check=True)
 
-def checkout(branch):
+def checkout(branch, force_normal=False):
     """checks out `branch`, using -b if it doesn't exist, pulling otherwise"""
-    if branch in sh('git branch', quiet=True, stdout=PIPE).stdout.decode('utf-8'):
+    if branch == 'main' and not force_normal:
+        sh('git checkout main', quiet=True, stdout=PIPE, stderr=PIPE)
+    elif branch in sh('git branch', quiet=True, stdout=PIPE).stdout.decode('utf-8'):
         sh(f'git checkout {branch}')
         sh('git pull --ff-only')
     else:
@@ -86,14 +88,14 @@ elif not path.isdir(folder):
     exit(1)
 
 chdir(folder)
-sh('git checkout main', quiet=True, stdout=PIPE)
+checkout('main')
 if action not in ['help', 'version', 'request', 'rm']:
     sh('git pull --ff-only')
 
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
 
-if action in ['request', 'alias', 'rm']:
+if action in ['request', 'alias', 'rm', 'add']:
     while len(argv) >= 2 and argv[1][0] != '-':
         name += ' ' + argv.pop(1)
     name = split(' |,|;|:', name)
@@ -102,7 +104,7 @@ parser = ArgumentParser()
 parser.add_argument('-b', '--branch')
 parser.add_argument('-l', '--language')
 parser.add_argument('-m', '--commit-message', default=
-        f'{name}: add page' if action == 'add' else f'{name}: ')
+        f'add page' if action == 'add' else f'{name}: ')
 parser.add_argument('-p', '--platform', default='common')
 parser.add_argument('-c', '--command', default=shell)
 # TODO: `--template`/`-t` for `add`
@@ -149,20 +151,20 @@ elif action == 'missing':
             print(p)
 elif action == 'add':
     # TODO: translated templates
-    # TODO: support varargs
     checkout(args.branch)
-    with open(page_path(), 'w') as f:
-        f.write(f'# {name}\n\n'
-                '> DESC\n'
-                '> More information: <insert>.\n\n'
-                '- Example1:\n\n'
-                '`' + name + ' {{arg1}} {{arg2}}`\n')
-    sh(f'{editor} {page_path()}')
-    sh(f'tldrl -v {page_path()}')
-    sh(f'git add {page_path()}')
-    sh(f'git commit -m \'{args.commit_message}\'')
+    for name in name:
+        with open(page_path(name), 'w') as f:
+            f.write(f'# {name}\n\n'
+                    '> DESC\n'
+                    '> More information: <insert>.\n\n'
+                    '- Example1:\n\n'
+                    '`' + name + ' {{arg1}} {{arg2}}`\n')
+        sh(f'{editor} {page_path(name)}')
+        sh(f'tldrl -v {page_path(name)}')
+        sh(f'git add {page_path(name)}')
+        sh(f'git commit -m \'{name}: {args.commit_message}\'')
     sh(f'git push -u origin {args.branch}')
-    sh('git checkout main')
+    checkout('main')
 elif action == 'alias':
     # TODO: translations with automatic check for which pages of the target exist
     #       (that needs a markdown parser, which is an...interesting problem)
@@ -186,7 +188,7 @@ elif action == 'alias':
     sh(f'git push -u origin {args.branch}')
     params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
     run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
-    sh('git checkout main')
+    checkout('main')
 elif action == 'edit':
     checkout(args.branch)
     sh(f'{editor} {page_path()}')
@@ -194,7 +196,7 @@ elif action == 'edit':
     sh(f'git add {page_path()}')
     sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
-    sh('git checkout main')
+    checkout('main')
     # TODO: open PR page
     # TODO: `quickedit` for editing existing PRs
 elif action == 'rawedit':
@@ -203,7 +205,7 @@ elif action == 'rawedit':
     sh('git add -A')
     sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
-    sh('git checkout main')
+    checkout('main')
     # TODO: open PR page
 elif action == 'request':
     if len(name) == 1:
