@@ -6,7 +6,6 @@
 - `fd`
 - `$SHELL` or `bash`
 - `$EDITOR` or `vi`
-- `view`
 - `xdg-open` on Linux, `open` otherwise
 - `git`
 - `npm` (or `tldrl` installed from another source)

@@ -30,13 +30,13 @@
 
 - Find all pages that start with "llvm-":
 
-`tldrgal find {{llvm-}}`
+`tldrgal fd {{llvm-}}`
 
 - Find all translations of the `vim` page:
 
-`tldrgal find '^{{vim}}.md$'`
+`tldrgal fd '^{{vim}}.md$'`
 
-- View a page (currently uses `view`, which is installed by `vim`):
+- View a page (invokes `tldr {{vim}}`):
 
 `tldrgal view {{vim}}`
 

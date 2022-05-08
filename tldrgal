@@ -7,14 +7,18 @@
 # TODO: add-from-man
 # TODO: no-url flag for multi req
 # TODO: --base-directory
+# TODO: only pull when necessary (maybe also --fast option)
+# TODO: implement `cat` natively
+# TODO: support spaces in page_path
 from argparse import ArgumentParser
 from functools import reduce
-from os import path, chdir
+from os import chdir, path
+from platform import system
 from re import split
-from subprocess import run, PIPE
+from subprocess import PIPE, run
 from sys import argv, stderr
 from urllib.parse import urlencode
-from platform import system
+
 from tldrlib import *
 
 __version__ = '2.0-dev'
@@ -35,7 +39,6 @@ aliases = {
     'new': 'add',
     'create': 'add',
     'req': 'request',
-    'fd': 'find',
     'open': 'view',
     'delete': 'rm',
     'del': 'rm',
@@ -51,8 +54,6 @@ aliases = {
 }
 
 action = aliases[ac] if (ac := argv.pop(1).lower()) in aliases else ac
-
-name = argv.pop(1) if action not in ['missing', 'update', 'help', 'version'] else 'error'
 
 def sh(cmd, quiet=False, **kwargs):
     if not quiet:
@@ -95,16 +96,21 @@ if action not in ['help', 'version', 'request', 'rm']:
 if 'tldrl' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
 
-if action in ['request', 'alias', 'rm', 'add']:
-    while len(argv) >= 2 and argv[1][0] != '-':
-        name += ' ' + argv.pop(1)
-    name = split(' |,|;|:', name)
+# TODO: improve
+if action in ['missing', 'update', 'help', 'version']:
+    name = 'ERROR'
+else:
+    name = argv.pop(1)
+    if action in ['request', 'alias', 'rm', 'add']:
+        while len(argv) >= 2 and argv[1][0] != '-':
+            name += ' ' + argv.pop(1)
+        name = split(' |,|;|:', name)
 
 parser = ArgumentParser()
 parser.add_argument('-b', '--branch')
 parser.add_argument('-l', '--language')
 parser.add_argument('-m', '--commit-message', default=
-        f'add page' if action == 'add' else f'{name}: ')
+        'add page' if action == 'add' else f'{name}: ')
 parser.add_argument('-p', '--platform', default='common')
 parser.add_argument('-c', '--command', default=shell)
 # TODO: `--template`/`-t` for `add`
@@ -113,10 +119,11 @@ args = parser.parse_args()
 
 if args.branch is None:
     args.branch = name if isinstance(name, str) else reduce(lambda x, y: x + ',' + y, name)
-    args.branch = args.branch.replace('+', 'x').split('=')[0]
+    args.branch = args.branch.replace('+', 'x').split('=')[0].split('/')[-1]
 
 def page_path(n=name):
     p = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
+    n = n.replace(' ', '-')
     return p + f'/{args.platform}/{n}.md'
 
 if action == 'version':
@@ -127,11 +134,12 @@ elif action == 'help':
     print()
     print(f'{argv0} add [name]')
     print(f'{argv0} alias [name]=[target] ...')
+    print(f'{argv0} fromman [name]=[path]')
     print(f'{argv0} edit [name]')
     print(f'{argv0} missing')
     print(f'{argv0} rawedit [branch]')
     print(f'{argv0} request [name] ...')
-    print(f'{argv0} find [regex]')
+    print(f'{argv0} fd [regex]')
     print(f'{argv0} view [name]')
     print(f'{argv0} cat [name]')
     print(f'{argv0} rm [branch]')
@@ -189,6 +197,24 @@ elif action == 'alias':
     params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
     run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
     checkout('main')
+elif action == 'fromman':
+    # TODO:
+    n = name.split('=')[0]
+    f = name.split('=')[1]
+    man = sh('awk \'/\\.[sS][hH].*EXAMPLES.*/{b=1;next}/\\.[sS][hH]/{b=0}b\' ' + f +
+             ' | pandoc -f man - -o - -t markdown', quiet=True, stdout=PIPE).stdout.decode('utf-8')
+    checkout(args.branch)
+    with open(page_path(n), 'w') as f:
+        f.write(f'# {n}\n\n'
+                '> DESC\n'
+                '> More information: <insert>.\n\n'
+                f'{man}\n')
+    sh(f'{editor} {page_path(n)}')
+    sh(f'tldrl -v {page_path(n)}')
+    sh(f'git add {page_path(n)}')
+    sh(f'git commit -m \'{n}: {args.commit_message}\'')
+    sh(f'git push -u origin {args.branch}')
+    checkout('main')
 elif action == 'edit':
     checkout(args.branch)
     sh(f'{editor} {page_path()}')
@@ -214,7 +240,7 @@ elif action == 'request':
         title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, name)
         body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', name))
         new_issue({'title': title, 'body': body})
-elif action == 'find':
+elif action == 'fd':
     sh(f'fd \'{name}\'')
 elif action == 'view':
     sh(f'tldr {name}')
