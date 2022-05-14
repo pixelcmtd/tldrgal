@@ -1,8 +1,8 @@
 # tldrgal
 
-> Contribute to [`tldr`](https://github.com/tldr-pages/tldr).
-> Inspired by Homebrew's `create`, `edit`, `bump-formula-pr` and `bump-cask-pr`.
-> More information: <[INSTALL.md](INSTALL.md)>.
+> Contribute to [`tldr`](https://github.com/tldr-pages/tldr). Inspired by
+> Homebrew's `create`, `edit`, `bump-formula-pr` and `bump-cask-pr`. More
+> information: <[INSTALL.md](INSTALL.md)>.
 
 - Create a new page:
 
@@ -47,6 +47,10 @@
 - Grep in all files from `tldr`:
 
 `tldrgal grep "{{bad.*user}}"`
+
+- Run `git blame` on a specific page:
+
+`tldrgal blame vim`
 
 - Check out a specific branch without doing anything else:
 

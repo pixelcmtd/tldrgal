@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# TODO: implement the platform finding thing from client spec
 # TODO: `translate` action
 # TODO: put on pypi
 # TODO: revert to branch from before (very annoying and complicated to get right)
@@ -144,6 +145,7 @@ elif action == 'help':
     print(f'{argv0} cat [name]')
     print(f'{argv0} rm [branch]')
     print(f'{argv0} grep [regex]')
+    print(f'{argv0} blame [name]')
     print(f'{argv0} checkout [branch]')
     print(f'{argv0} update')
     print()
@@ -258,6 +260,8 @@ elif action == 'update':
 elif action == 'grep':
     # TODO: support a custom dir
     sh(f'grep --color=always --exclude-dir=.git -R -- \'{name}\' .')
+elif action == 'blame':
+    sh(f'git blame \'{page_path()}\'')
 elif action == 'checkout':
     checkout(name)
 else:
