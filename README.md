@@ -1,8 +1,10 @@
 # tldrgal
 
-> Contribute to [`tldr`](https://github.com/tldr-pages/tldr). Inspired by
-> Homebrew's `create`, `edit`, `bump-formula-pr` and `bump-cask-pr`. More
-> information: <[INSTALL.md](INSTALL.md)>.
+> Contribute to [`tldr`](https://github.com/tldr-pages/tldr).
+
+> Inspired by Homebrew's `create`, `edit`, `bump-formula-pr` and `bump-cask-pr`.
+
+> More information: <[INSTALL.md](INSTALL.md)>.
 
 - Create a new page:
 
@@ -28,21 +30,9 @@
 
 `tldrgal missing`
 
-- Find all pages that start with "llvm-":
-
-`tldrgal fd {{llvm-}}`
-
-- Find all translations of the `vim` page:
-
-`tldrgal fd '^{{vim}}.md$'`
-
 - View a page (invokes `tldr {{vim}}`):
 
 `tldrgal view {{vim}}`
-
-- Remove a branch:
-
-`tldrgal rm {{clangxx}}`
 
 - Grep in all files from `tldr`:
 
@@ -52,9 +42,9 @@
 
 `tldrgal blame vim`
 
-- Check out a specific branch without doing anything else:
+- Run a command in the `tldr` repo:
 
-`tldrgal checkout {{my-branch}}`
+`tldrgal run fd vim`
 
 - Update your fork with upstream changes:
 
