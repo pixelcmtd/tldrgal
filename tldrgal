@@ -13,7 +13,7 @@
 # TODO: support spaces in page_path
 from argparse import ArgumentParser
 from functools import reduce
-from os import chdir, path
+from os import chdir, getenv, path, walk
 from platform import system
 from re import split
 from subprocess import PIPE, run
@@ -77,6 +77,19 @@ def checkout(branch, force_normal=False):
 def new_issue(params):
     params['labels'] = 'help wanted,new command'
     run_open('https://github.com/tldr-pages/tldr/issues/new?' + urlencode(params))
+
+def get_all_installed_programs() -> set:
+    s = set()
+    for path in getenv('PATH').split(':'):
+        for _, _, f in walk(path):
+            s.update(f)
+    return s
+
+def get_all_tldr_pages(head: str) -> set:
+    s = set()
+    for _, _, f in walk(head):
+        s.update([f.replace('.md', '') for f in f])
+    return s
 
 folder = home + '/.cache/tldr'
 if not path.exists(folder):
