@@ -22,7 +22,7 @@
 
 `tldrgal edit {{command}}`
 
-- Make an edit that isn't contrained to a single page:
+- Make an edit that isn't constrained to a single page:
 
 `tldrgal rawedit {{blow-everything-up}}`
 
