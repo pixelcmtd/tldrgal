@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# TODO: implement the platform finding thing from client spec
-# TODO: `translate` action
+# TODO: implement the platform finding thing from client spec (https://github.com/tldr-pages/tldr/blob/9ac1ffd5ca55f977da63d954788be5c463def51a/CLIENT-SPECIFICATION.md#platform-1)
+# TODO: `translate` action (copy to pages.LANG, open in EDITOR, commit)
 # TODO: put on pypi
 # TODO: revert to branch from before (very annoying and complicated to get right)
 # TODO: rawedit foreach with grep
 # TODO: think about silencing a lot of commands given mainly by the user
-# TODO: add-from-man
-# TODO: no-url flag for multi req
+# TODO: add-from-man (takes the EXAMPLE section from the man page)
+# TODO: --no-url flag for multi req
 # TODO: --base-directory
 # TODO: only pull when necessary (maybe also --fast option)
 # TODO: implement `cat` natively
@@ -51,27 +51,36 @@ aliases = {
 
 action = aliases[ac] if (ac := argv.pop(1).lower()) in aliases else ac
 
+
 def sh(cmd, quiet=False, **kwargs):
     if not quiet:
         print(cmd, file=stderr)
     return run(cmd, shell=True, check=True, **kwargs)
 
+
 def run_open(arg):
-    return run(['xdg-open' if 'linux' in system().lower() else 'open', arg], check=True)
+    # TODO: other systems with x might want xdg too
+    return run(['xdg-open' if 'linux' in system().lower() else 'open', arg],
+               check=True)
+
 
 def checkout(branch, force_normal=False):
     """checks out `branch`, using -b if it doesn't exist, pulling otherwise"""
     if branch == 'main' and not force_normal:
         sh('git checkout main', quiet=True, stdout=PIPE, stderr=PIPE)
-    elif branch in sh('git branch', quiet=True, stdout=PIPE).stdout.decode('utf-8'):
-        sh(f'git checkout {branch}')
+    elif branch in sh('git branch', quiet=True,
+                      stdout=PIPE).stdout.decode('utf-8'):
+        sh(f'git checkout \'{branch}\'')
         sh('git pull --ff-only')
     else:
-        sh(f'git checkout -b {branch}')
+        sh(f'git checkout -b \'{branch}\'')
+
 
 def new_issue(params):
     params['labels'] = 'help wanted,new command'
-    run_open('https://github.com/tldr-pages/tldr/issues/new?' + urlencode(params))
+    run_open('https://github.com/tldr-pages/tldr/issues/new?' +
+             urlencode(params))
+
 
 def get_all_installed_programs() -> set:
     s = set()
@@ -80,11 +89,13 @@ def get_all_installed_programs() -> set:
             s.update(f)
     return s
 
+
 def get_all_tldr_pages(head: str) -> set:
     s = set()
     for _, _, f in walk(head):
         s.update([f.replace('.md', '') for f in f])
     return s
+
 
 folder = home + '/.cache/tldr'
 if not path.exists(folder):
@@ -94,7 +105,9 @@ if not path.exists(folder):
     chdir(folder)
     sh('git remote add upstream https://github.com/tldr-pages/tldr.git')
 elif not path.isdir(folder):
-    print(f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?')
+    print(
+        f'{folder} exists but is not a directory, that is REALLY weird, please...delete it?'
+    )
     exit(1)
 
 chdir(folder)
@@ -118,22 +131,30 @@ else:
 parser = ArgumentParser()
 parser.add_argument('-b', '--branch')
 parser.add_argument('-l', '--language')
-parser.add_argument('-m', '--commit-message', default=
-        'add page' if action == 'add' else f'{name}: ')
-parser.add_argument('-p', '--platform', default='common')
+parser.add_argument('-m',
+                    '--commit-message',
+                    default='add page' if action
+                    in ['add', 'fromman', 'appleman'] else f'{name}: ')
+parser.add_argument('-p',
+                    '--platform',
+                    default='osx' if action == 'appleman' else 'common')
 parser.add_argument('-c', '--command', default=shell)
 # TODO: `--template`/`-t` for `add`
 # TODO: `--quiet`/`-q` for `sh`
+# TODO: `--edit`/`-e` for `alias`
 args = parser.parse_args()
 
 if args.branch is None:
-    args.branch = name if isinstance(name, str) else reduce(lambda x, y: x + ',' + y, name)
+    args.branch = name if isinstance(name, str) else reduce(
+        lambda x, y: x + ',' + y, name)
     args.branch = args.branch.replace('+', 'x').split('=')[0].split('/')[-1]
+
 
 def page_path(n=name):
     p = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
     n = n.replace(' ', '-')
     return p + f'/{args.platform}/{n}.md'
+
 
 if action == 'version':
     print(f'tldrgal {__version__} by pixel, chrissx Media')
@@ -156,7 +177,8 @@ elif action == 'help':
     print(f'{argv0} update')
     print()
     print('help, --help, -h, -H          Display this help')
-    print('version, --version, -v, -V    Display information about this program')
+    print(
+        'version, --version, -v, -V    Display information about this program')
     print()
     # TODO: HELP
 elif action == 'missing':
@@ -179,7 +201,7 @@ elif action == 'add':
         sh(f'tldrl -v {page_path(name)}')
         sh(f'git add {page_path(name)}')
         sh(f'git commit -m \'{name}: {args.commit_message}\'')
-    sh(f'git push -u origin {args.branch}')
+    sh(f'git push -u origin \'{args.branch}\'')
     checkout('main')
 elif action == 'alias':
     # TODO: translations with automatic check for which pages of the target exist
@@ -202,15 +224,24 @@ elif action == 'alias':
         sh(f'git add {page_path(name)}')
         sh(f'git commit -m \'{name}: add page\'')
     sh(f'git push -u origin {args.branch}')
-    params = urlencode({'labels': 'new command', 'body': f'alias of `{target}`', 'expand': 1})
-    run_open(f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?' + params)
+    params = urlencode({
+        'labels': 'new command',
+        'body': f'alias of `{target}`',
+        'expand': 1
+    })
+    run_open(
+        f'https://github.com/tldr-pages/tldr/compare/main...{username}:{args.branch}?'
+        + params)
     checkout('main')
 elif action == 'fromman':
     # TODO:
     n = name.split('=')[0]
     f = name.split('=')[1]
-    man = sh('awk \'/\\.[sS][hH].*EXAMPLES.*/{b=1;next}/\\.[sS][hH]/{b=0}b\' ' + f +
-             ' | pandoc -f man - -o - -t markdown', quiet=True, stdout=PIPE).stdout.decode('utf-8')
+    man = sh(
+        'awk \'/\\.[sS][hH].*EXAMPLES.*/{b=1;next}/\\.[sS][hH]/{b=0}b\' ' + f +
+        ' | pandoc -f man - -o - -t markdown',
+        quiet=True,
+        stdout=PIPE).stdout.decode('utf-8')
     checkout(args.branch)
     with open(page_path(n), 'w') as f:
         f.write(f'# {n}\n\n'
@@ -246,7 +277,8 @@ elif action == 'request':
         new_issue({'title': f'page request: {name[0]}'})
     else:
         title = 'page request: ' + reduce(lambda x, y: x + ', ' + y, name)
-        body = reduce(lambda x, y: x + '\n' + y, map(lambda p: f'- [ ] [{p}]()', name))
+        body = reduce(lambda x, y: x + '\n' + y,
+                      map(lambda p: f'- [ ] [{p}]()', name))
         new_issue({'title': title, 'body': body})
 elif action == 'view':
     sh(f'tldr {name}')
