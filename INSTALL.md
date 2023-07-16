@@ -8,7 +8,7 @@
 - `$EDITOR` or `vi`
 - `xdg-open` on Linux, `open` otherwise
 - `git`
-- `npm` (or `tldrl` installed from another source)
+- `npm` (or `tldr-lint` installed from another source)
 
 ## Setup
 

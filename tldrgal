@@ -10,6 +10,7 @@
 # TODO: only pull when necessary (maybe also --fast option)
 # TODO: implement `cat` natively
 # TODO: support spaces in page_path
+# TODO: "universal else" (run by default)
 from argparse import ArgumentParser
 from functools import reduce
 from os import chdir, getenv, path, walk
@@ -117,7 +118,7 @@ checkout('main')
 if action not in ['help', 'version', 'request']:
     sh('git pull --ff-only')
 
-if 'tldrl' not in get_all_installed_programs():
+if 'tldr-lint' not in get_all_installed_programs():
     sh('npm install -g tldr-lint')
 
 # TODO: improve
@@ -152,7 +153,7 @@ if args.branch is None:
     args.branch = args.branch.replace('+', 'x').split('=')[0].split('/')[-1]
 
 
-def page_path(n=name):
+def page_path(n: str=name) -> str:
     p = 'pages' if args.language is None or args.language == 'en' else f'pages.{args.language}'
     n = n.replace(' ', '-')
     return p + f'/{args.platform}/{n}.md'
@@ -162,7 +163,7 @@ if action == 'version':
     print(f'tldrgal {__version__} by pixel, chrissx Media')
 elif action == 'help':
     argv0 = path.basename(argv[0])
-    print(f'{argv0} [action] [...] [-bclmp]')
+    print(f'usage: {argv0} [action] [...] [-bclmp]')
     print()
     print(f'{argv0} add [name]')
     print(f'{argv0} alias [name]=[target] ...')
@@ -182,6 +183,8 @@ elif action == 'help':
     print(
         'version, --version, -v, -V    Display information about this program')
     print()
+    #print('Options:')
+    #print()
     # TODO: HELP
     if action == '_help':
         exit(1)
@@ -203,7 +206,7 @@ elif action == 'add':
                     '- Example1:\n\n'
                     '`' + name + ' {{arg1}} {{arg2}}`\n')
         sh(f'{editor} {page_path(name)}')
-        sh(f'tldrl -v {page_path(name)}')
+        sh(f'tldr-lint -v {page_path(name)}')
         sh(f'git add {page_path(name)}')
         sh(f'git commit -m \'{name}: {args.commit_message}\'')
     sh(f'git push -u origin \'{args.branch}\'')
@@ -254,7 +257,7 @@ elif action == 'fromman':
                 '> More information: <insert>.\n\n'
                 f'{man}\n')
     sh(f'{editor} {page_path(n)}')
-    sh(f'tldrl -v {page_path(n)}')
+    sh(f'tldr-lint -v {page_path(n)}')
     sh(f'git add {page_path(n)}')
     sh(f'git commit -m \'{n}: {args.commit_message}\'')
     sh(f'git push -u origin {args.branch}')
@@ -262,7 +265,7 @@ elif action == 'fromman':
 elif action == 'edit':
     checkout(args.branch)
     sh(f'{editor} {page_path()}')
-    sh(f'tldrl -v {page_path()}')
+    sh(f'tldr-lint -v {page_path()}')
     sh(f'git add {page_path()}')
     sh(f'GIT_EDITOR={editor} git commit -e -m "{args.commit_message}"')
     sh(f'git push -u origin {args.branch}')
