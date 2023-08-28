@@ -133,7 +133,7 @@ else:
 
 parser = ArgumentParser()
 parser.add_argument('-b', '--branch')
-parser.add_argument('-l', '--language')
+parser.add_argument('-L', '--language')
 parser.add_argument('-m',
                     '--commit-message',
                     default='add page' if action
