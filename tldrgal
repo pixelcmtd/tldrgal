@@ -46,6 +46,8 @@ aliases = {
     'cmd': 'run',
     'raw-edit': 'rawedit',
     'quick-edit': 'quickedit',
+    'apple-man': 'appleman',
+    '': 'appleman',
     # TODO: one-letter abbrs for all commands
 }
 
@@ -161,7 +163,7 @@ def page_path(n: str=name) -> str:
 
 if action == 'version':
     print(f'tldrgal {__version__} by pixel, chrissx Media')
-elif action == 'help':
+elif action in ['help', '_help']:
     argv0 = path.basename(argv[0])
     print(f'usage: {argv0} [action] [...] [-bclmp]')
     print()
@@ -260,6 +262,29 @@ elif action == 'fromman':
     sh(f'tldr-lint -v {page_path(n)}')
     sh(f'git add {page_path(n)}')
     sh(f'git commit -m \'{n}: {args.commit_message}\'')
+    sh(f'git push -u origin {args.branch}')
+    checkout('main')
+elif action == 'appleman':
+    manpage = sh(f'man -w \'{name}\'', quiet=True,
+                 stdout=PIPE).stdout.decode('utf-8').rstrip()
+    desc = sh(f'sed \'s/^.Nd //\' \'{manpage}\' | grep -v \'^\.\'',
+              quiet=True,
+              stdout=PIPE).stdout.decode('utf-8')
+    checkout(args.branch)
+    with open(page_path(), 'w') as f:
+        f.write(
+            f'# {name}\n\n'
+            f'> {desc}'
+            '> It should not be invoked manually.\n'
+            # TODO: take section from `manpage`
+            # TODO: check 404 beforehand
+            f'> More information: <https://www.manpagez.com/man/8/{name}/>.\n\n'
+            '- Start the daemon:\n\n'
+            f'`{name}`\n')
+    sh(f'{editor} {page_path()}')
+    sh(f'tldr-lint -v {page_path()}')
+    sh(f'git add {page_path()}')
+    sh(f'git commit -m \'{name}: {args.commit_message}\'')
     sh(f'git push -u origin {args.branch}')
     checkout('main')
 elif action == 'edit':
