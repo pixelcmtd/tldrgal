@@ -165,7 +165,7 @@ if action == 'version':
     print(f'tldrgal {__version__} by pixel, chrissx Media')
 elif action in ['help', '_help']:
     argv0 = path.basename(argv[0])
-    print(f'usage: {argv0} [action] [...] [-bclmp]')
+    print(f'usage: {argv0} [action] [...] [-bcLmp]')
     print()
     print(f'{argv0} add [name]')
     print(f'{argv0} alias [name]=[target] ...')
@@ -182,12 +182,15 @@ elif action in ['help', '_help']:
     print(f'{argv0} update')
     print()
     print('help, --help, -h, -H          Display this help')
-    print(
-        'version, --version, -v, -V    Display information about this program')
+    print('version, --version, -v, -V    Display version information')
     print()
-    #print('Options:')
-    #print()
-    # TODO: HELP
+    print('Options:')
+    print()
+    print('-b [BRANCH], --branch [BRANCH]       Custom git branch name')
+    print('-L [LANG], --language [LANG]         Language of the page (default: en)')
+    print('-m [MSG], --commit-message [MSG]     Custom git commit message')
+    print('-p [PLATFORM], --platform [PLATFORM] tldr platform (default: common)')
+    print('-c [CMD], --command [CMD]            Command to run (rawedit, default: $SHELL or bash)')
     if action == '_help':
         exit(1)
 elif action == 'missing':
@@ -198,7 +201,7 @@ elif action == 'missing':
             print(p)
 elif action == 'add':
     # TODO: translated templates
-    # TODO: -L ≠ en ∧ en version exists⇒ translate
+    # TODO: -L ≠ en ∧ en version exists ⇒ translate
     checkout(args.branch)
     for name in name:
         with open(page_path(name), 'w') as f:
@@ -267,7 +270,7 @@ elif action == 'fromman':
 elif action == 'appleman':
     manpage = sh(f'man -w \'{name}\'', quiet=True,
                  stdout=PIPE).stdout.decode('utf-8').rstrip()
-    desc = sh(f'sed \'s/^.Nd //\' \'{manpage}\' | grep -v \'^\.\'',
+    desc = sh(f'sed \'s/^.Nd //\' \'{manpage}\' | grep -v \'^\\.\'',
               quiet=True,
               stdout=PIPE).stdout.decode('utf-8')
     checkout(args.branch)
